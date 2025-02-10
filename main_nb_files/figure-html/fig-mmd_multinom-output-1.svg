@@ -6,11 +6,11 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2025-02-09T13:22:31.004184</dc:date>
+    <dc:date>2025-02-10T08:56:43.353497</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
-      <dc:title>Matplotlib v3.10.0, https://matplotlib.org/</dc:title>
+      <dc:title>Matplotlib v3.8.0, https://matplotlib.org/</dc:title>
      </cc:Agent>
     </dc:creator>
    </cc:Work>
@@ -163,10 +163,10 @@ z
 " transform="scale(0.015625)"/>
       </defs>
       <use xlink:href="#DejaVuSans-Bold-50"/>
-      <use xlink:href="#DejaVuSans-Bold-72" transform="translate(73.291016 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-69" transform="translate(122.607422 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-6f" transform="translate(156.884766 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-72" transform="translate(225.585938 0)"/>
+      <use xlink:href="#DejaVuSans-Bold-72" x="73.291016"/>
+      <use xlink:href="#DejaVuSans-Bold-69" x="122.607422"/>
+      <use xlink:href="#DejaVuSans-Bold-6f" x="156.884766"/>
+      <use xlink:href="#DejaVuSans-Bold-72" x="225.585938"/>
      </g>
     </g>
     <g id="patch_4">
@@ -260,14 +260,14 @@ z
 " transform="scale(0.015625)"/>
       </defs>
       <use xlink:href="#DejaVuSans-Bold-50"/>
-      <use xlink:href="#DejaVuSans-Bold-6f" transform="translate(73.291016 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-73" transform="translate(141.992188 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-74" transform="translate(201.513672 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-65" transform="translate(249.316406 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-72" transform="translate(317.138672 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-69" transform="translate(366.455078 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-6f" transform="translate(400.732422 0)"/>
-      <use xlink:href="#DejaVuSans-Bold-72" transform="translate(469.433594 0)"/>
+      <use xlink:href="#DejaVuSans-Bold-6f" x="73.291016"/>
+      <use xlink:href="#DejaVuSans-Bold-73" x="141.992188"/>
+      <use xlink:href="#DejaVuSans-Bold-74" x="201.513672"/>
+      <use xlink:href="#DejaVuSans-Bold-65" x="249.316406"/>
+      <use xlink:href="#DejaVuSans-Bold-72" x="317.138672"/>
+      <use xlink:href="#DejaVuSans-Bold-69" x="366.455078"/>
+      <use xlink:href="#DejaVuSans-Bold-6f" x="400.732422"/>
+      <use xlink:href="#DejaVuSans-Bold-72" x="469.433594"/>
      </g>
     </g>
     <g id="patch_5">

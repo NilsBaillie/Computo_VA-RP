@@ -9,7 +9,7 @@
 <meta name="author" content="Nils Baillie">
 <meta name="author" content="Antoine Van Biesbroeck">
 <meta name="author" content="Clément Gauchy">
-<meta name="dcterms.date" content="2025-02-09">
+<meta name="dcterms.date" content="2025-02-10">
 <meta name="keywords" content="Reference priors, Variational inference, Neural networks">
 
 <title>Variational inference for approximate reference priors using neural networks</title>
@@ -213,14 +213,14 @@ ISSN 2824-7795</p>
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">February 9, 2025</p>
+        <p class="date">February 10, 2025</p>
       </div>
     </div>
                                     
       <div>
       <div class="quarto-title-meta-heading">Modified</div>
       <div class="quarto-title-meta-contents">
-        <p class="date-modified">February 9, 2025</p>
+        <p class="date-modified">February 10, 2025</p>
       </div>
     </div>
       
@@ -288,7 +288,7 @@ ISSN 2824-7795</p>
 <div class="hidden">
 
 </div>
-<div id="29269294" class="cell" data-execution_count="1">
+<div id="df4ffdcb" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
@@ -556,7 +556,7 @@ J_{post}(\theta \, | \, \mathbf{X}) = \text{Dir}_q(\theta; \gamma) \quad \text{w
 \theta = \text{Softmax}(W^{\top}\varepsilon + b),  
 </span></p>
 <p>with <span class="math inline">W \in \mathbb{R}^{p,4}</span> the weight matrix and <span class="math inline">b \in \mathbb{R}^4</span> the bias vector. The density function of <span class="math inline">\theta</span> does not have a closed expression. The following results are obtained with <span class="math inline">\alpha=0.5</span> for the divergence and the lower bound is used as the objective function.</p>
-<div id="7367dfce" class="cell" data-execution_count="2">
+<div id="32631af1" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -747,7 +747,7 @@ Figure&nbsp;3: Histograms of the fitted posterior and the Jeffreys posterior for
 \widehat{\text{MMD}^2}(p,q) =  \frac{1}{m(m-1)} \sum_{i \neq j}K(x_i,x_j) +  \frac{1}{n(n-1)} \sum_{i \neq j}K(y_i,y_j) - \frac{2}{mn} \sum_{i,j} K(x_i,y_j),
 </span></p>
 <p>where <span class="math inline">(x_1,...,x_m)</span> and <span class="math inline">(y_1,...,y_n)</span> are samples from <span class="math inline">p</span> and <span class="math inline">q</span> respectively. In our case, <span class="math inline">p</span> is the distribution obtained through variational inference and <span class="math inline">q</span> is the target Jeffreys distribution. Since the MMD can be time-consuming or memory inefficient to compute in practice for very large samples, we consider only the last <span class="math inline">2 \cdot 10^4</span> entries of our priors and posterior samples.</p>
-<div id="445ccc67" class="cell" data-execution_count="6">
+<div id="8996d202" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>compute_autocorr <span class="op">=</span> <span class="va">False</span></span>
@@ -773,7 +773,7 @@ Figure&nbsp;3: Histograms of the fitted posterior and the Jeffreys posterior for
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="6426847e" class="cell" data-execution_count="7">
+<div id="6c466dff" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>name_file <span class="op">=</span> <span class="st">'Multinomial_MMD.pkl'</span></span>
@@ -916,7 +916,7 @@ Figure&nbsp;4: MMD values for different <span class="math inline">\alpha</span>-
 \hat{f}_{\alpha}(x) \approx \frac{x-1}{\alpha(\alpha-1)} + \frac{x\log(x)}{\alpha},    
 </span></p>
 <p>which diverges for all <span class="math inline">x</span> because of the first term. Hence, we advise the user to avoid <span class="math inline">\alpha</span> values that are too close to <span class="math inline">1</span>. In the following, we use <span class="math inline">\alpha = 0.5</span> for the divergence.</p>
-<div id="bac3b10b" class="cell" data-execution_count="9">
+<div id="84a38d8f" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>compute_mmd_ref_value <span class="op">=</span> <span class="va">False</span></span>
@@ -982,7 +982,7 @@ J(\theta) \propto 1/\theta_2^3 \quad \text{as} \quad  \theta_2 \longrightarrow +
 \end{cases}
 \tag{12}</span></span></p>
 <p>While <span class="math inline">\|w_2\|_2</span> does not tend toward <span class="math inline">\infty</span>, these decay rates strongly differ from the ones of the Jeffreys prior w.r.t. <span class="math inline">\theta_2</span>. Otherwise, the decay rates resemble to something proportional to <span class="math inline">(\theta_2+1)^{-1}</span> in both directions. In our numerical computations, the optimization process yielded a VA-RP with parameters <span class="math inline">w_2</span> and <span class="math inline">b_2</span> that did not diverge to extreme values.</p>
-<div id="6fc3a1e1" class="cell" data-execution_count="10">
+<div id="d7bb8ac4" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -1106,7 +1106,7 @@ Figure&nbsp;5: Monte Carlo estimation of the generalized mutual information with
 </div>
 <p>In <a href="#fig-probit_mi" class="quarto-xref">Figure&nbsp;5</a> is shown the evolution of the mutual information through the optimization of the VA-RP for the probit model. We perceive high mutual information values at the initialization, which we interpret as a result of the fact that the parametric prior on <span class="math inline">\theta_1</span> is already quite close to its target distribution.</p>
 <p>With <span class="math inline">\alpha</span>-divergences, using a moment constraint of the form <span class="math inline">a(\theta_2) =\theta_2^{\kappa}</span> for the second component is relevant here as long as <span class="math inline">\kappa \in \left(0, \frac{2}{1+1/\alpha}\right)</span>, to ensure that the resulting constrained prior is indeed proper. With <span class="math inline">\alpha=0.5</span>, we take the value <span class="math inline">\kappa=1/8</span> and we use the same neural network. The evolution of the mutual information through the optimization of the constrained VA-RP is proposed in <a href="#fig-probit_constr_mi" class="quarto-xref">Figure&nbsp;6</a>. In <a href="#fig-probit_constr_gap" class="quarto-xref">Figure&nbsp;7</a> is presented the evolution of the constrained gap: the difference between the target and current values for the constraint.</p>
-<div id="38a76a36" class="cell" data-execution_count="12">
+<div id="661a2da2" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>kappa <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="dv">8</span></span>
@@ -1488,7 +1488,7 @@ L_N(\mathbf{X}\,|\,\theta) = \prod_{i=1}^N \frac{1}{\sqrt{2\pi \theta}} \exp \le
 J_{post}(\theta \, | \ \mathbf{X}) = \Gamma^{-1} \left(\theta; \frac{N}{2}, \frac{1}{2} \sum_{i=1}^N(X_i - \mu)^2  \right).
 </span></p>
 <p>We use a neural network with one layer and a Softplus activation function. The dimension of the latent variable <span class="math inline">\varepsilon</span> is <span class="math inline">p=10</span>.</p>
-<div id="2b236822" class="cell" data-execution_count="17">
+<div id="480a205b" class="cell" data-execution_count="17">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -1660,7 +1660,7 @@ a(\theta) \sim \theta^{-\tau} \quad \text{as} \quad  \theta \longrightarrow +\in
 \mathcal{K} = \int_0^{+\infty} \frac{1}{\theta}\cdot a(\theta)^{1/\alpha} d\theta \quad \text{and} \quad  c = \int_0^{+\infty} \frac{1}{\theta}\cdot a(\theta)^{1+(1/\alpha)} d\theta.
 </span></p>
 <p>For instance, let <span class="math inline">\alpha=1/2</span>. If <span class="math inline">\beta=-1</span>, <span class="math inline">\tau=1</span>, then <span class="math inline">\mathcal{K} = 1/2</span> and <span class="math inline">c = \pi/16</span>. The constraint value is <span class="math inline">c/\mathcal{K} = \pi/8</span>. Thus, for this example, we only have to apply the third step of the proposed method. We use in this case a one-layer neural network with <span class="math inline">\exp</span> as the activation function, the parametric set of priors corresponds to log-normal distributions.</p>
-<div id="7cbeddc1" class="cell" data-execution_count="20">
+<div id="1fd1f871" class="cell" data-execution_count="20">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -2293,7 +2293,7 @@ Zellner, Arnold. 1996. <span>“Models, Prior Information, and Bayesian Analysis
   title = {Variational Inference for Approximate Reference Priors Using
     Neural Networks},
   journal = {Computo},
-  date = {2025-02-09},
+  date = {2025-02-10},
   url = {https://computo.sfds.asso.fr/template-computo-quarto},
   doi = {xxxx},
   issn = {2824-7795},
