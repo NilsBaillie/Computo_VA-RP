@@ -75,7 +75,8 @@ vertCEA = "#73be4b"
 
 path_plot = os.path.join(base_dir, "plots_data")
 probit_path = os.path.join(base_dir, "data_probit")
-tirages_path = os.path.join(probit_path, "tirages_probit")
+tirages_path0 = os.path.join(probit_path, "tirages_probit")
+tirages_path = os.path.join(tirages_path0, "tirages_data")
 int_jeffreys_path = os.path.join(probit_path, "Multiseed_AJ")
 varp_probit_path = os.path.join(probit_path, "Multiseed_VARP")
 
