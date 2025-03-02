@@ -269,9 +269,9 @@ $$ {#eq-MCgradI}
 In their work, @nalisnick2017learning propose an alternative objective function to optimize, that we call $B_{\rD_f}$.
 
 This function corresponds to a lower bound of the mutual information. It is derived from an upper bound on the marginal distribution and relies on maximizing the likelihood. Their approach is only presented for $f=-\log$, we generalize the lower bound for any decreasing function $f$: 
-$$
+\begin{equation*} 
 B_{\rD_f}(\pi; L_N) = \displaystyle \int_{\Theta}\int_{\mathcal{X}^N}f\left(\frac{L_N(\bX\, |\, \hat{\theta}_{MLE})}{L_N(\bX\, |\, \theta)}\right)\pi(\theta)L_N(\bX\, | \, \theta)d\bX d\theta,
-$$ 
+\end{equation*} 
 where $\hat{\theta}_{MLE}$ being the maximum likelihood estimator (MLE). 
 It only depends on the likelihood and not on $\lambda$ which simplifies the gradient computation: 
 $$
