@@ -288,7 +288,7 @@ ISSN 2824-7795</p>
 <div class="hidden">
 
 </div>
-<div id="6288365e" class="cell" data-execution_count="1">
+<div id="881351ab" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
@@ -424,9 +424,9 @@ J(\theta) \propto \det (\mathcal{I}(\theta))^{1/2} \quad \text{with} \quad \math
 .\end{cases}  
 \tag{11}</span></span></p>
 <p>In their work, <span class="citation" data-cites="nalisnick2017learning">Nalisnick and Smyth (<a href="#ref-nalisnick2017learning" role="doc-biblioref">2017</a>)</span> propose an alternative objective function to optimize, that we call <span class="math inline">B_{\mathrm{D}_f}</span>.</p>
-<p>This function corresponds to a lower bound of the mutual information. It is derived from an upper bound on the marginal distribution and relies on maximizing the likelihood. Their approach is only presented for <span class="math inline">f=-\log</span>, we generalize the lower bound for any decreasing function <span class="math inline">f</span>: <span class="math display">
+<p>This function corresponds to a lower bound of the mutual information. It is derived from an upper bound on the marginal distribution and relies on maximizing the likelihood. Their approach is only presented for <span class="math inline">f=-\log</span>, we generalize the lower bound for any decreasing function <span class="math inline">f</span>: <span class="math display">\begin{equation*}
 B_{\mathrm{D}_f}(\pi; L_N) = \displaystyle \int_{\Theta}\int_{\mathcal{X}^N}f\left(\frac{L_N(\mathbf{X}\, |\, \hat{\theta}_{MLE})}{L_N(\mathbf{X}\, |\, \theta)}\right)\pi(\theta)L_N(\mathbf{X}\, | \, \theta)d\mathbf{X}d\theta,
-</span> where <span class="math inline">\hat{\theta}_{MLE}</span> being the maximum likelihood estimator (MLE). It only depends on the likelihood and not on <span class="math inline">\lambda</span> which simplifies the gradient computation: <span class="math display">
+\end{equation*}</span> where <span class="math inline">\hat{\theta}_{MLE}</span> being the maximum likelihood estimator (MLE). It only depends on the likelihood and not on <span class="math inline">\lambda</span> which simplifies the gradient computation: <span class="math display">
 \frac{\partial B_{\mathrm{D}_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) = \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q\frac{\partial \tilde{B}}{\partial \theta_j}(g(\lambda,\varepsilon))\frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right],
 </span> where: <span class="math display">
 \frac{\partial \tilde{B}}{\partial \theta_j}(\theta) = \mathbb{E}_{\mathbf{X}\sim L_N(\cdot \,|\,\theta)}\left[ \frac{\partial \log L_N}{\partial \theta_j}(\mathbf{X}\,|\, \theta)F \left(\frac{L_N(\mathbf{X}\,| \,\hat{\theta}_{MLE})}{L_N(\mathbf{X}\,|\,\theta)} \right)  \right].
@@ -557,7 +557,7 @@ J_{post}(\theta \, | \, \mathbf{X}) = \text{Dir}_q(\theta; \gamma) \quad \text{w
 \theta = \text{Softmax}(W^{\top}\varepsilon + b),  
 </span></p>
 <p>with <span class="math inline">W \in \mathbb{R}^{p,4}</span> the weight matrix and <span class="math inline">b \in \mathbb{R}^4</span> the bias vector. The density function of <span class="math inline">\theta</span> does not have a closed expression. The following results are obtained with <span class="math inline">\alpha=0.5</span> for the divergence and the lower bound is used as the objective function.</p>
-<div id="21279cac" class="cell" data-execution_count="2">
+<div id="7e4feaef" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -748,7 +748,7 @@ Figure&nbsp;3: Histograms of the fitted posterior and the Jeffreys posterior for
 \widehat{\text{MMD}^2}(p,q) =  \frac{1}{m(m-1)} \sum_{i \neq j}K(x_i,x_j) +  \frac{1}{n(n-1)} \sum_{i \neq j}K(y_i,y_j) - \frac{2}{mn} \sum_{i,j} K(x_i,y_j),
 </span></p>
 <p>where <span class="math inline">(x_1,...,x_m)</span> and <span class="math inline">(y_1,...,y_n)</span> are samples from <span class="math inline">p</span> and <span class="math inline">q</span> respectively. In our case, <span class="math inline">p</span> is the distribution obtained through variational inference and <span class="math inline">q</span> is the target Jeffreys distribution. Since the MMD can be time-consuming or memory inefficient to compute in practice for very large samples, we consider only the last <span class="math inline">2 \cdot 10^4</span> entries of our priors and posterior samples.</p>
-<div id="a61343ae" class="cell" data-execution_count="6">
+<div id="4ea93951" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>compute_autocorr <span class="op">=</span> <span class="va">False</span></span>
@@ -774,7 +774,7 @@ Figure&nbsp;3: Histograms of the fitted posterior and the Jeffreys posterior for
 <span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div id="9d00540f" class="cell" data-execution_count="7">
+<div id="9fb6f51e" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>name_file <span class="op">=</span> <span class="st">'Multinomial_MMD.pkl'</span></span>
@@ -917,7 +917,7 @@ Figure&nbsp;4: MMD values for different <span class="math inline">\alpha</span>-
 \hat{f}_{\alpha}(x) \approx \frac{x-1}{\alpha(\alpha-1)} + \frac{x\log(x)}{\alpha},    
 </span></p>
 <p>which diverges for all <span class="math inline">x</span> because of the first term. Hence, we advise the user to avoid <span class="math inline">\alpha</span> values that are too close to <span class="math inline">1</span>. In the following, we use <span class="math inline">\alpha = 0.5</span> for the divergence.</p>
-<div id="905697a4" class="cell" data-execution_count="9">
+<div id="9ec308b5" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>compute_mmd_ref_value <span class="op">=</span> <span class="va">False</span></span>
@@ -983,7 +983,7 @@ J(\theta) \propto 1/\theta_2^3 \quad \text{as} \quad  \theta_2 \longrightarrow +
 \end{cases}
 \tag{12}</span></span></p>
 <p>While <span class="math inline">\|w_2\|_2</span> does not tend toward <span class="math inline">\infty</span>, these decay rates strongly differ from the ones of the Jeffreys prior w.r.t. <span class="math inline">\theta_2</span>. Otherwise, the decay rates resemble to something proportional to <span class="math inline">(\theta_2+1)^{-1}</span> in both directions. In our numerical computations, the optimization process yielded a VA-RP with parameters <span class="math inline">w_2</span> and <span class="math inline">b_2</span> that did not diverge to extreme values.</p>
-<div id="7a561dd9" class="cell" data-execution_count="10">
+<div id="560f211c" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -1107,7 +1107,7 @@ Figure&nbsp;5: Monte Carlo estimation of the generalized mutual information with
 </div>
 <p>In <a href="#fig-probit_mi" class="quarto-xref">Figure&nbsp;5</a> is shown the evolution of the mutual information through the optimization of the VA-RP for the probit model. We perceive high mutual information values at the initialization, which we interpret as a result of the fact that the parametric prior on <span class="math inline">\theta_1</span> is already quite close to its target distribution.</p>
 <p>With <span class="math inline">\alpha</span>-divergences, using a moment constraint of the form <span class="math inline">a(\theta_2) =\theta_2^{\kappa}</span> for the second component is relevant here as long as <span class="math inline">\kappa \in \left(0, \frac{2}{1+1/\alpha}\right)</span>, to ensure that the resulting constrained prior is indeed proper. With <span class="math inline">\alpha=0.5</span>, we take the value <span class="math inline">\kappa=1/8</span> and we use the same neural network. The evolution of the mutual information through the optimization of the constrained VA-RP is proposed in <a href="#fig-probit_constr_mi" class="quarto-xref">Figure&nbsp;6</a>. In <a href="#fig-probit_constr_gap" class="quarto-xref">Figure&nbsp;7</a> is presented the evolution of the constrained gap: the difference between the target and current values for the constraint.</p>
-<div id="0696b2a6" class="cell" data-execution_count="12">
+<div id="de6ce549" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>kappa <span class="op">=</span> <span class="dv">1</span><span class="op">/</span><span class="dv">8</span></span>
@@ -1516,7 +1516,7 @@ L_N(\mathbf{X}\,|\,\theta) = \prod_{i=1}^N \frac{1}{\sqrt{2\pi \theta}} \exp \le
 J_{post}(\theta \, | \ \mathbf{X}) = \Gamma^{-1} \left(\theta; \frac{N}{2}, \frac{1}{2} \sum_{i=1}^N(X_i - \mu)^2  \right).
 </span></p>
 <p>We use a neural network with one layer and a Softplus activation function. The dimension of the latent variable <span class="math inline">\varepsilon</span> is <span class="math inline">p=10</span>.</p>
-<div id="fea06bf1" class="cell" data-execution_count="17">
+<div id="40973321" class="cell" data-execution_count="17">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -1688,7 +1688,7 @@ a(\theta) \sim \theta^{-\tau} \quad \text{as} \quad  \theta \longrightarrow +\in
 \mathcal{K} = \int_0^{+\infty} \frac{1}{\theta}\cdot a(\theta)^{1/\alpha} d\theta \quad \text{and} \quad  c = \int_0^{+\infty} \frac{1}{\theta}\cdot a(\theta)^{1+(1/\alpha)} d\theta.
 </span></p>
 <p>For instance, let <span class="math inline">\alpha=1/2</span>. If <span class="math inline">\beta=-1</span>, <span class="math inline">\tau=1</span>, then <span class="math inline">\mathcal{K} = 1/2</span> and <span class="math inline">c = \pi/16</span>. The constraint value is <span class="math inline">c/\mathcal{K} = \pi/8</span>. Thus, for this example, we only have to apply the third step of the proposed method. We use in this case a one-layer neural network with <span class="math inline">\exp</span> as the activation function, the parametric set of priors corresponds to log-normal distributions.</p>
-<div id="568388cb" class="cell" data-execution_count="20">
+<div id="01ce6b22" class="cell" data-execution_count="20">
 <details class="code-fold">
 <summary>Hide/Show the code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters and classes</span></span>
@@ -3097,9 +3097,9 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb27-269"><a href="#cb27-269" aria-hidden="true" tabindex="-1"></a>In their work, @nalisnick2017learning propose an alternative objective function to optimize, that we call $B_{\rD_f}$.</span>
 <span id="cb27-270"><a href="#cb27-270" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-271"><a href="#cb27-271" aria-hidden="true" tabindex="-1"></a>This function corresponds to a lower bound of the mutual information. It is derived from an upper bound on the marginal distribution and relies on maximizing the likelihood. Their approach is only presented for $f=-\log$, we generalize the lower bound for any decreasing function $f$: </span>
-<span id="cb27-272"><a href="#cb27-272" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb27-272"><a href="#cb27-272" aria-hidden="true" tabindex="-1"></a>\begin{equation*} </span>
 <span id="cb27-273"><a href="#cb27-273" aria-hidden="true" tabindex="-1"></a>B_{\rD_f}(\pi; L_N) = \displaystyle \int_{\Theta}\int_{\mathcal{X}^N}f\left(\frac{L_N(\bX\, |\, \hat{\theta}_{MLE})}{L_N(\bX\, |\, \theta)}\right)\pi(\theta)L_N(\bX\, | \, \theta)d\bX d\theta,</span>
-<span id="cb27-274"><a href="#cb27-274" aria-hidden="true" tabindex="-1"></a>$$ </span>
+<span id="cb27-274"><a href="#cb27-274" aria-hidden="true" tabindex="-1"></a>\end{equation*} </span>
 <span id="cb27-275"><a href="#cb27-275" aria-hidden="true" tabindex="-1"></a>where $\hat{\theta}_{MLE}$ being the maximum likelihood estimator (MLE). </span>
 <span id="cb27-276"><a href="#cb27-276" aria-hidden="true" tabindex="-1"></a>It only depends on the likelihood and not on $\lambda$ which simplifies the gradient computation: </span>
 <span id="cb27-277"><a href="#cb27-277" aria-hidden="true" tabindex="-1"></a>$$</span>
