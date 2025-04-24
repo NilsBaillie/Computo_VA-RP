@@ -14,7 +14,6 @@ Authors :
 
 
 
-
 ## Abstract
 
 In Bayesian statistics, the choice of the prior can have an important influence on the posterior and the parameter estimation, especially when few data samples are available. To limit the added subjectivity from a priori information, one can use the framework of objective priors, namely the Jeffreys and reference priors. However, computing such priors is a difficult task in general. We develop in this paper a flexible algorithm based on variational inference which computes approximations of objective priors from a set of parametric distributions using neural networks. We also show that our algorithm can retrieve 
