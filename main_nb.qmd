@@ -1,3 +1,46 @@
+---
+title: "Variational inference for approximate objective priors using neural networks"
+subtitle: ""
+author:
+  - name: Nils Baillie
+    corresponding: true
+    email: nils.baillie@cea.fr
+    affiliations:
+      - name: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques, 91191 Gif-sur-Yvette, France
+      - name: CMAP, CNRS, École polytechnique, Institut Polytechnique de Paris, 91120 Palaiseau, France
+        url: https://cmap.ip-paris.fr/ 
+  - name: Antoine Van Biesbroeck
+    affiliations:
+      - name: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques, 91191 Gif-sur-Yvette, France
+      - name: CMAP, CNRS, École polytechnique, Institut Polytechnique de Paris, 91120 Palaiseau, France
+        url: https://cmap.ip-paris.fr/ 
+  - name: Clément Gauchy
+    affiliations:
+      - name: Université Paris-Saclay, CEA, Service de Génie Logiciel pour la Simulation, 91191 Gif-sur-Yvette, France
+date: last-modified
+date-modified: last-modified
+abstract: >+
+  In Bayesian statistics, the choice of the prior can have an important influence on the posterior and the parameter estimation, especially when few data samples are available. To limit the added subjectivity from a priori information, one can use the framework of [objective priors, more particularly, we focus on reference priors in this work]{style="color:orange;"}. However, computing such priors is a difficult task in general. [Hence, we consider cases where the reference prior simplifies to the Jeffreys prior]{style="color:orange;"}. We develop in this paper a flexible algorithm based on variational inference which computes approximations of priors from a set of parametric distributions using neural networks. We also show that our algorithm can retrieve [modified Jeffreys]{style="color:green;"} priors when constraints are specified in the optimization problem to ensure the solution is proper. We propose a simple method to recover a relevant approximation of the parametric posterior distribution using Markov Chain Monte Carlo (MCMC) methods even if the density function of the parametric prior is not known in general. Numerical experiments on several statistical models of increasing complexity are presented. We show the usefulness of this approach by recovering the target distribution. The performance of the algorithm is evaluated on both prior and posterior distributions, jointly using variational inference and MCMC sampling.
+keywords: [Reference priors, Variational inference, Neural networks]
+citation:
+  type: article-journal
+  container-title: "Computo"
+  doi: "xxxx"
+  url: https://computo.sfds.asso.fr/template-computo-quarto
+  publisher: "Société Française de Statistique"
+  issn: "2824-7795"
+bibliography: references.bib
+github-user: computorg
+repo: "Computo_VA-RP"
+draft: true # set to false once the build is running
+published: false # will be set to true once accepted
+format:
+  computo-html: default
+  computo-pdf: default
+jupyter: python3
+---
+
+
 ::: {.hidden}
 \def\bX{\mathbf{X}}
 \newcommand{\rD}{\mathrm{D}}
@@ -46,36 +89,34 @@ varp_probit_path = os.path.join(probit_path, "Multiseed_VARP")
 
 load_results_Multinom = True
 load_results_MultiMMD = True
+load_results_MultiMMD_NNsensi = True
 load_results_Probit_nocstr = True
 load_results_Probit_cstr = True
 load_results_Normal_nocstr = True
 load_results_Normal_cstr = True
-
+load_results_Probit_nocstr_latentdim = True
+load_results_Probit_cstr_latentdim = True
 ```
 
 # Introduction
 
-The Bayesian approach to statistical inference aims to produce estimations using the posterior distribution. The latter is derived by updating the prior distribution with the observed statistics thanks to Bayes' theorem. However, the shape of the posterior can be heavily influenced by the prior choice when the amount of available data is limited or the prior distribution is highly informative. 
-For this reason, selecting a prior remains a daunting task that must be handled carefully. Hence, systematic methods has been introduced by statisticians to help the choice of the prior distribution, both in cases where subjective knowledge is available or not @Press2009. @Kass1996 propose different ways of defining the level of non-informativeness of a prior distribution. The most famous method is the Maximum Entropy (ME) prior distribution that has been popularized by @Jaynes1957. In a Bayesian context, ME and Maximal Data Information (MDI) priors have been studied by @Zellner1996, @Soofi2000. Other candidates for objective priors are the so-called matching priors @Reid2003, which are priors such that the Bayesian posterior credible intervals correspond to confidence intervals of the sampling model. Moreover, when a simpler model is known, the Penalizing Complexity (PC) priors are yet another rationale of choosing an objective (or reference) prior distribution @Simpson2017.
+The Bayesian approach to statistical inference aims to produce estimations using the posterior distribution. The latter is derived by updating the prior distribution with the observed statistics thanks to Bayes' theorem. However, the shape of the posterior can be heavily influenced by the prior choice when the amount of available data is limited or when the prior distribution is highly informative. For this reason, selecting a prior remains a daunting task that must be handled carefully. Hence, systematic methods have been introduced by statisticians to help in the choice of the prior distribution, both in cases where subjective knowledge is available or not (@Press2009). @Kass1996 propose different ways of defining the level of non-informativeness of a prior distribution. The most famous method is the Maximum Entropy (ME) prior distribution that has been popularized by @Jaynes1957. In a Bayesian context, ME and Maximal Data Information (MDI) priors have been studied by @Zellner1996, @Soofi2000. Other candidates for objective priors are the so-called matching priors (@Reid2003), which are priors such that the Bayesian posterior credible intervals correspond to confidence intervals of the sampling model. Moreover, when a simpler model is known, the Penalizing Complexity (PC) priors are yet another rationale of choosing an objective (or reference) prior distribution (@Simpson2017).
 
 
 In this paper, we will focus on the reference prior theory. First introduced in @Bernardo1979a and further formalized in @berger2009formal, the main rationale behind the reference prior theory is the maximization of the information brought by the data during Bayesian inference. Specifically, reference priors (RPs) are constructed to maximize the mutual information metric, which is defined as a divergence between itself and the posterior. In this way, it ensures that the data plays a dominant role in the Bayesian framework. [There is consensus that the definition of RPs in high dimensions should be more subtle than simply maximizing the mutual information (see e.g. @berger2015). A common approach consists in a hierarchical construction of reference priors, firstly mentioned in @bernardo1979 and detailed further in @berger1992develop. 
 In this approach, an ordering is imposed on groups of parameters, and the reference prior is derived by sequentially maximizing the mutual information for each group.]{style="color:green;"}
 
-[Reference priors are used in]{style="color:green;"} various statistical models, such as Gaussian process-based models @Paulo2005, @Gu2016, generalized linear models @Natarajan2000, and even  Bayesian Neural Networks @gao2022deep. The RPs are recognized for their objective nature in practical studies @Dandrea2021, @Li2021, @van2024reference, yet they suffer from their low computational feasibility. Indeed, the expression of the RPs often leads to an intricate theoretical expression, which necessitates a heavy numerical cost to be derived that becomes even more cumbersome as the dimensionality of the problem increases. Moreover, in many applications, a posteriori estimates are obtained using Markov Chain Monte Carlo (MCMC) methods, which require a large number of prior evaluations, further compounding the computational burden. [The hierarchical construction of reference priors aggravates this problem even more, for that reason, we will focus solely on the maximization of the mutual information, which corresponds to the special case where no ordering is imposed on the parameters. In this context, it has been shown by @clarke1994jeffreys, and more recently by  @van2023generalized in a more general case, that the Jeffreys prior (@jeffreys1946prior) is the prior that maximizes the mutual information when the number of data samples tends to infinity. Hence, it will serve as the target distribution in our applications.]{style="color:green;"}
+[Reference priors are used in]{style="color:green;"} various statistical models, such as Gaussian process-based models (@Paulo2005, @Gu2016), generalized linear models (@Natarajan2000), and even  Bayesian Neural Networks (@gao2022deep). The RPs are recognized for their objective nature in practical studies (@Dandrea2021, @Li2021, @van2024reference), yet they suffer from their low computational feasibility. Indeed, the expression of the RPs often leads to an intricate theoretical expression, which necessitates a heavy numerical cost to be derived that becomes even more cumbersome as the dimensionality of the problem increases. Moreover, in many applications, a posteriori estimates are obtained using Markov Chain Monte Carlo (MCMC) methods, which require a large number of prior evaluations, further compounding the computational burden. [The hierarchical construction of reference priors aggravates this problem even more, for that reason, we will focus solely on the maximization of the mutual information, which corresponds to the special case where no ordering is imposed on the parameters. In this context, it has been shown by @clarke1994jeffreys, and more recently by  @van2023generalized in a more general case, that the Jeffreys prior (@jeffreys1946prior) is the prior that maximizes the mutual information when the number of data samples tends to infinity. Hence, it will serve as the target distribution in our applications.]{style="color:green;"}
 
-In general, when we look for sampling or approximating a probability distribution, several approaches arise and may be used within a Bayesian framework. In this work, we focus on variational inference methods. Variational inference seeks to approximate a complex target distribution $p$, ---e.g. a posterior--- by optimizing over a family of simpler parameterized distributions $q_{\lambda}$. The goal then is to find the distribution $q_{\lambda^\ast}$ that is the best approximation of $p$ by minimizing a divergence, such as the Kullback-Leibler (KL) divergence. Variational inference methods have been widely adopted in various contexts, including popular models such as Variational Autoencoders (VAEs) @kingma2019introduction, which are a class of generative models where one wants to learn the underlying distribution of data samples. We can also mention normalizing flows @papamakarios2021nf, @kobyzev_flows, which consider diffeomorphism transformations to recover the density of the approximated distribution from the simpler one taken as input.
+In general, when we look for sampling or approximating a probability distribution, several approaches arise and may be used within a Bayesian framework. In this work, we focus on variational inference methods. Variational inference seeks to approximate a complex target distribution $p$, ---e.g. a posterior--- by optimizing over a family of simpler parameterized distributions $q_{\lambda}$. The goal then is to find the distribution $q_{\lambda^\ast}$ that is the best approximation of $p$ by minimizing a divergence, such as the Kullback-Leibler (KL) divergence. Variational inference methods have been widely adopted in various contexts, including popular models such as Variational Autoencoders (VAEs) (@kingma2019introduction), which are a class of generative models where one wants to learn the underlying distribution of data samples. We can also mention normalizing flows (@papamakarios2021nf, @kobyzev_flows), which consider diffeomorphism transformations to recover the density of the approximated distribution from the simpler one taken as input.
 
+[Variational inference seems especially relevant in a context where one wants to approximate prior distributions defined as maximizers of a given metric. This kind of approach was introduced in @nalisnick2017learning and  @gauchy_var_rp in order to approximate the Jeffreys prior in one-dimensional models. The main difference being the choice of the objective function. In @nalisnick2017learning, the authors propose a variational inference procedure using a lower bound of the mutual information as an optimization criterion, whereas in @gauchy_var_rp, stochastic gradient ascent is directly applied on the mutual information criterion.]{style="color:orange;"}
 
-When it resorts to approximate [reference priors]{style="color:green;"}, it is possible to leverage [their]{style="color:green;"} optimal characteristic (that is, [they maximize]{style="color:green;"} the mutual information metric) instead of directly maximizing a divergence between a target and an output. Indeed, the mutual information metric does not depend on the target distribution that we want to reach so  iterative derivations of the theoretical [solution]{style="color:green;"} are not necessary. In @nalisnick2017learning, the authors propose a variational inference procedure to approximate the [Jeffreys prior]{style="color:green;"} using a lower bound of the mutual information as an optimization criterion. In @gauchy_var_rp, a variational inference procedure is  proposed using stochastic gradient [ascent]{style="color:green;"} of the mutual information criterion and illustrated on simple statistical models. 
+By building on these foundations, this paper proposes a novel variational inference algorithm [designed to approximate reference priors by maximizing mutual information. Specifically, we focus on the case where no ordering is imposed on the parameters, in which case the reference prior coincides with the Jeffreys prior]{style="color:orange;"}. For simplicity, we refer to them as variational approximations of the reference priors (VA-RPs).
 
+As in @nalisnick2017learning and @gauchy_var_rp, the [Jeffreys prior]{style="color:green;"} is approximated in a parametric family of probability distributions implicitly defined by the push-forward probability distribution through a nonlinear function (see e.g. @papamakarios2021nf and @Marzouk2016). We will focus in this paper to push-forward probability measures through neural networks. In comparison with the previous works, we benchmark extensively our algorithm on statistical models of different complexity and nature to assess its robustness. We also extend our algorithm to handle a more general case where a generalized mutual information criterion is defined using $f$-divergences (@van2023generalized). In this paper, we restrict the different benchmarks to $\alpha$-divergences. Additionally, we extend the framework to allow the integration of linear constraints on the prior in the pipeline. That last feature permits handling situations where the [Jeffreys prior]{style="color:green;"} may be improper (i.e. it integrates to infinity). Improper priors pose a challenge because (i) one can not sample from the  a priori distribution, and (ii) they do not ensure that the posterior is proper, jeopardizing  a posteriori inference. Recent work detailed in @van2024constr introduces linear constraints that ensure the proper aspects of [priors maximizing the mutual information]{style="color:green;"}. Our algorithm incorporates these constraints, providing a principled way to address improper priors and ensuring that the resulting posterior distributions are well-defined and suitable for practical use.
 
-By building on these foundations, this paper proposes a novel variational inference algorithm to compute [objective priors that are approximations of Jeffreys priors. We recall that our priors correspond to approximations of reference priors when no ordering is imposed on the parameters. For simplicity, we refer to them as variational approximations of the reference priors (VA-RPs).]{style="color:green;"}. 
-
-
-As in @nalisnick2017learning and @gauchy_var_rp, the [Jeffreys prior]{style="color:green;"} is approximated in a parametric family of probability distributions implicitly defined by the push-forward probability distribution through a nonlinear function (see e.g. @papamakarios2021nf and @Marzouk2016). We will focus in this paper to push-forward probability measures through neural networks. In comparison with the previous works, we benchmark extensively our algorithm on statistical models of different complexity and nature to ensure its robustness. We also extend our algorithm to handle a more general [case]{style="color:green;"} where a generalized mutual information criterion is defined using $f$-divergences (@van2023generalized). In this paper, we restrict the different benchmarks to $\alpha$-divergences. Additionally, we extend the framework to allow the integration of linear constraints on the prior in the pipeline. That last feature permits handling situations where the [Jeffreys prior]{style="color:green;"} may be improper (i.e. it integrates to infinity). Improper priors pose a challenge because (i) one can not sample from the  a priori distribution, and (ii) they do not ensure that the posterior is proper, jeopardizing  a posteriori inference. Recent work detailed in @van2024constr introduces linear constraints that ensure the proper aspects of [priors maximizing the mutual information]{style="color:green;"}. Our algorithm incorporates these constraints, providing a principled way to address improper priors and ensuring that the resulting posterior distributions are well-defined and suitable for practical use.
-
-First, we will introduce the reference prior theory of @bernardo1979 and the recent developments around generalized reference priors made by @van2023generalized in @sec-rp_theory. Next, the [methodology to construct VA-RPs]{style="color:green;"} is detailed in @sec-VA-RP. A stochastic gradient algorithm is proposed, as well as an augmented Lagrangian algorithm for the constrained optimization problem, for learning the parameters of an implicitly defined probability density function that will approximate the reference prior. Moreover, a mindful trick to sample from the posterior distribution by MCMC using the implicitly defined prior distribution is proposed. In @sec-numexp, different numerical experiments from various test cases are carried out in order to benchmark the VA-RP. Analytical statistical models where the [Jeffreys prior]{style="color:green;"} is known are tested to allow comparison between the VA-RP and the [Jeffreys prior]{style="color:green;"}.
+First, we will introduce the reference prior theory of @bernardo1979 and the recent developments around generalized reference priors made by @van2023generalized in @sec-rp_theory. Next, the [methodology to construct VA-RPs]{style="color:green;"} is detailed in @sec-VA-RP. A stochastic gradient algorithm is proposed, as well as an augmented Lagrangian algorithm for the constrained optimization problem, for learning the parameters of an implicitly defined probability density function that will approximate the target prior. Moreover, a mindful trick to sample from the posterior distribution by MCMC using the implicitly defined prior distribution is proposed. In @sec-numexp, different numerical experiments from various test cases are carried out in order to benchmark the VA-RP. Analytical statistical models where the [Jeffreys prior]{style="color:green;"} is known are tested to allow comparison between the VA-RP and the [Jeffreys prior]{style="color:green;"}.
 
 # Reference priors theory  {#sec-rp_theory}
 
@@ -93,9 +134,9 @@ Hence, $\pi^\ast$ is a prior that maximizes the Kullback-Leibler divergence betw
 $$
     {\rm KL}(p\,||\,q) = \int_\Omega \log\left(\frac{p(\omega)}{q(\omega)}\right) p(\omega)d\omega.
 $$
-Thus, $\pi^\ast$ is the prior that maximises the influence of the data on the posterior distribution, justifying its reference (or objective) properties. The [prior]{style="color:green;"} $\pi^\ast$ can also be interpreted using channel coding and information theory @MacKay2003 (chapter 9). Indeed, remark that $I(\pi; L_N)$ corresponds to the mutual information $I(\theta, \bX)$ between the random variable $\theta \sim \pi$ and the data $\bX \sim \mathbb{P}_{\pi, N}$, it measures the information that conveys the data $\bX$ about the parameters $\theta$. The maximal value of this mutual information is defined as the channel's capacity. The RP thus corresponds to the prior distribution that maximizes the information about $\theta$ conveyed by the data $\bX$. 
+Thus, $\pi^\ast$ is the prior that maximizes the influence of the data on the posterior distribution, justifying its reference (or objective) properties. The [prior]{style="color:green;"} $\pi^\ast$ can also be interpreted using channel coding and information theory (@MacKay2003, chapter 9). Indeed, remark that $I(\pi; L_N)$ corresponds to the mutual information $I(\theta, \bX)$ between the random variable $\theta \sim \pi$ and the data $\bX \sim \mathbb{P}_{\pi, N}$, it measures the information that conveys the data $\bX$ about the parameters $\theta$. The maximal value of this mutual information is defined as the channel's capacity. $\pi^\ast$ thus corresponds to the prior distribution that maximizes the information about $\theta$ conveyed by the data $\bX$. 
 
-Using Fubini's theorem and Bayes' theorem, we can derive an alternative and more practical expression for the mutual information : 
+Using Fubini's theorem and Bayes' theorem, we can derive an alternative and more practical expression for the mutual information: 
 $$
     I(\pi; L_N) = \int_{\Theta}{\rm KL}(L_N(\cdot \, | \, \theta)||p_{\pi,N}) \pi(\theta)d\theta.
 $$ {#eq-mutualinfo}
@@ -108,7 +149,7 @@ with
 $$
     \rD_f(p\,||\,q) = \int_{\Omega} f\left(\frac{p(\omega)}{q(\omega)}\right) q(\omega)d\omega,
 $$
-where $f$ is usually chosen to be a convex function mapping 1 to 0. Remark that the classical mutual information is obtained by choosing $f = -\log$, indeed, $\rD_{-\log}(p\,||\,q) = {\rm KL}(q\,||\,p)$. The formal RP is defined as $N$ goes to infinity, but since we want to develop an algorithm to approximate the distribution of the RP, we are restricted to the case where $N$ takes a finite value. However, the limit case $N \rightarrow +\infty$ is relevant because it has been shown in @clarke1994jeffreys, @van2023generalized
+where $f$ is usually chosen to be a convex function mapping 1 to 0. Remark that the classical mutual information is obtained by choosing $f = -\log$, indeed, $\rD_{-\log}(p\,||\,q) = {\rm KL}(q\,||\,p)$. The formal RP is defined as $N$ goes to infinity, but in practice we are restricted to the case where $N$ takes a finite value. However, the limit case $N \rightarrow +\infty$ is relevant because it has been shown in @clarke1994jeffreys, @van2023generalized
 that the solution of this asymptotic problem is the Jeffreys prior when the mutual information is expressed as in @eq-mutualinfoberger, or when it is defined using an $\alpha$-divergence, as in @eq-mutual-info-Df with $f=f_\alpha$, where:
 
 $$
@@ -118,7 +159,7 @@ The Jeffreys prior, denoted by $J$, is defined as follows:
 $$
  J(\theta) \propto \det (\mathcal{I}(\theta))^{1/2} \quad \text{with} \quad \mathcal{I}(\theta) = - \int_{\mathcal{X}^N} \frac{\partial^2 \log L_N}{\partial \theta^2}(\bX\, | \, \theta)\cdot L_N(\bX\, | \, \theta) \, d\bX . 
 $$ 
-We suppose that the likelihood function is smooth such that the Fisher information matrix $\mathcal I$ is well-defined. The Jeffreys prior and the RP have the relevant property to be ``invariant by reparametrization'': 
+We suppose that the likelihood function is smooth such that the Fisher information matrix $\mathcal I$ is well-defined. The Jeffreys prior and the RP have the relevant property to be "invariant by reparametrization": 
 $$ 
 \forall \varphi \,\, \text{diffeomorphism} ,  \quad J(\theta) = \left| \frac{\partial \varphi}{\partial \theta} \right| \cdot J(\varphi(\theta)) .
 $$ 
@@ -126,27 +167,26 @@ This property expresses non-information in the sense that if there is no informa
 
 Actually, the historical definition of RPs involves the KL-divergence in the definition of the mutual information. Yet the use of $\alpha$-divergences instead is relevant because they can be seen as a continuous path between the KL-divergence and the Reverse-KL-divergence when $\alpha$ varies from $0$ to $1$.  We can also mention that for $\alpha = 1/2$, the $\alpha$-divergence is the squared Hellinger distance whose square root is a metric since it is symmetric and verifies the triangle inequality.
 
-
-
 Technically, the formal RP is constructed such that its projection on every compact subset (or open subset in @mure2018objective) of $\Theta$ maximizes asymptotically the mutual information, which allows for improper distributions to be RPs in some cases. The Jeffreys prior is itself often improper. 
 
-In our algorithm we consider probability distributions defined on the space $\Theta$ and not on sequences of subsets. A consequence of this statement is that our algorithm may tend to approximate improper priors in some cases. Indeed, any given sample by our algorithm results, by construction, from a proper distribution, which is expected to be a good approximation of the solution of the optimization problem expressed in @eq-RPdef. If $N$ is large enough, the latter should be close to the  ---potentially improper--- theoretical RP. This approach is justified to some extent since in the context of Q-vague convergence defined in @Bioche2016 for instance, improper priors can be the limit of sequences of proper priors. Although this theoretical notion of convergence is defined, no concrete metric is given, making quantification of the difference between proper and improper priors infeasible in practice. 
+In our algorithm we consider probability distributions defined on the space $\Theta$ and not on sequences of subsets. A consequence of this statement is that our algorithm may tend to approximate improper priors in some cases. Indeed, any given sample by our algorithm results, by construction, from a proper distribution, which is expected to be a good approximation of the solution of the optimization problem expressed in @eq-RPdef. This approach is justified to some extent since in the context of Q-vague convergence defined in @Bioche2016 for instance, improper priors can be the limit of sequences of proper priors. Although this theoretical notion of convergence is defined, no concrete metric is given, making quantification of the difference between proper and improper priors infeasible in practice. 
 
+[The term "reference prior" is now associated with a more general, hierarchical construction.]{style="color:orange;"} [We mentioned in the introduction the hierarchical construction of the reference prior, we present rapidly the case where the dimension $q=2$, i.e. $\theta = (\theta_1, \theta_2) \in \Theta_1 \times \Theta_2$ with $\theta_1$ and $\theta_2$ being in their own separate groups:]{style="color:green;"} 
 
-[We mentioned in the introduction the hierarchical construction of the reference prior, we present rapidly the case where the dimension $q=2$, i.e. $\theta = (\theta_1, \theta_2) \in \Theta_1 \times \Theta_2$ with $\theta_1$ and $\theta_2$ being in their own separate groups:]{style="color:green;"} 
-
-- [We obtain the first level conditional RP : $\pi_1^*(\cdot \, | \, \theta_2)$ on $\theta_1$ by maximizing the mutual information with fixed $\theta_2$ in the likelihood $L_N$.]{style="color:green;"}
-- [We define the second level likelihood using the previous RP as follows : 
+- [We obtain the first level conditional prior: $\pi_1^*(\cdot \, | \, \theta_2)$ on $\theta_1$ by maximizing asymptotically the mutual information with fixed $\theta_2$ in the likelihood $L_N$.]{style="color:green;"}
+- [We define the second level likelihood using the previous prior as follows: 
 $$
  L'_N(X \, | \, \theta_2) = \int_{\Theta_1} L_N(X \, | \, \theta_1, \theta_2)\pi_1^*(\theta_1 \, | \, \theta_2) d\theta_1.  
 $$
 ]{style="color:green;"}
-- [We define and solve the corresponding optimization problem with this function as our main likelihood function so we can obtain the second level RP : $\pi_2^*$ on $\theta_2$.]{style="color:green;"}
-- [This defines the hierarchical RP on $\theta$, which is of the form : $\pi^*(\theta) = \pi_1^*(\theta_1 \, | \, \theta_2) \pi_2^*(\theta_2)$.]{style="color:green;"}
+- [We define and solve the corresponding asymptotic optimization problem with this function as our main likelihood function so we can obtain the second level prior: $\pi_2^*$ on $\theta_2$.]{style="color:green;"}
+- [This defines the hierarchical RP on $\theta$, which is of the form: $\pi^*(\theta) = \pi_1^*(\theta_1 \, | \, \theta_2) \pi_2^*(\theta_2)$.]{style="color:green;"}
 
-[This construction can be extended to any number of groups of parameters with any ordering as presented in @berger1992develop. Although this definition can lead to priors different from the Jeffreys prior, it does not solve the issue of improper priors.]{style="color:green;"}
+[This construction can be extended to any number of groups of parameters with any ordering as presented in @berger1992develop.]{style="color:green;"} [However, it is important to note that priors defined through this procedure can still be improper.]{style="color:orange;"}
 
+[In summary, we introduced several priors: the Jeffreys prior, the non-asymptotic RP that maximizes the generalized mutual information, which depends on the chosen $f$-divergence and the value of $N$, the formal RP, that is obtained such that its projection on every (compact) subset maximizes asymptotically the generalized mutual information, hence it only depends on the $f$-divergence, and finally, the reference prior in the hierarchical sense. The latter reduces to the formal RP (i) in the one-dimensional case and (ii) in the multi-dimensional case, when all components of $\theta$ are placed in the same group. We will always be in one of these two cases in the following. In very specific situations, where the likelihood function is non-regular (@Ghosal1997Nonregular) or because of the choice of $f$ (@Liu2014otherRP), the formal RP and the Jeffreys prior can be different. However, as long as the likelihood is smooth which is verified for most statistical models and the KL-divergence or the $\alpha$-divergence with $\alpha \in (0,1)$ is used, these two priors are actually the same.]{style="color:orange;"}
 
+[The algorithm we develop aims at solving the mutual information optimization problem with $N$ fixed, thus our target prior is technically the non-asymptotic RP, nevertheless, the latter has no closed form expression, making the validation of the algorithm infeasible. If $N$ is large enough, this prior should be close to the formal RP which is equal to the Jeffreys prior in this framework. Hence, the Jeffreys prior serves as the target prior in the numerical applications because it can either be computed explicitly or approximated through numerical integration.]{style="color:orange;"}
 
 Furthermore, as mentioned in the introduction, improper priors can also compromise the validity of a posteriori estimates in some cases. To address this issue, we adapted our algorithm to handle the developments made in @van2024constr, which suggest a method to define proper [objective priors]{style="color:green;"} by simply resolving a constrained version of the initial optimization problem:
 $$
@@ -161,7 +201,7 @@ the author has proven that the constrained [solution]{style="color:green;"} $\ti
 $$
     \tilde\pi^\ast(\theta) \propto J(\theta)a(\theta)^{1/\alpha},
 $$
-which is proper.
+which is proper. This result implies that in the case where constraints are imposed, the target prior becomes this modified version of the Jeffreys prior.
 
 
 # Variational approximation of the reference prior (VA-RP)  {#sec-VA-RP}
@@ -169,7 +209,7 @@ which is proper.
 ## Implicitly defined parametric probability distributions using neural networks
 
 
-Variational inference refers to techniques that aim to approximate a probability distribution by solving an optimization problem ---that often takes a variational form, such as maximizing evidence lower bound (ELBO) @Kingma2014.
+Variational inference refers to techniques that aim to approximate a probability distribution by solving an optimization problem ---that often takes a variational form, such as maximizing evidence lower bound (ELBO) (@Kingma2014).
 It is thus relevant to consider them for approximating RPs, as the goal is to maximize, w.r.t. the prior,  the mutual information defined in @eq-mutualinfo. 
 
 We restrict the set of priors to a parametric space $\{\pi_\lambda,\,\lambda\in\Lambda\}$, $\Lambda\subset\mathbb{R}^L$, reducing the original optimization problem into a finite-dimensional one. The optimization problem in @eq-RPdef or @eq-def_const_RP becomes finding $\underset{\lambda\in\Lambda}{\operatorname{argmax}} \, I_{\rD_f}(\pi_\lambda; L_N)$.
@@ -183,13 +223,13 @@ The construction described above allows the consideration of a vast family of pr
 
 In the work of @nalisnick2017learning, this implicit sampling method is compared to several other algorithms used to learn RPs in the case of one-dimensional models, [where the RP is always the Jeffreys prior]{style="color:green;"}. Among these methods, we can mention an algorithm proposed by @berger2009formal which does not sample from the RP but only evaluates it for specific points, or an MCMC-based approach by @lafferty2013iterative, which is inspired from the previous one but can sample from the RP.
 
-According to this comparison, implicit sampling is, in the worst case, competitive with the other methods, but achieves state-of-the-art results in the best case. Hence, computing the variational approximation of the RP, which we will refer to as the VA-RP, seems to be a promising technique. [We admit that the term VA-RP is a slight abuse of terminology in our case since (i) the target prior is the (eventually constrained) Jeffreys prior, which is not necessarily the reference prior; and (ii) there is no guarantee that this target prior can be actually reproduced by the neural network. Indeed, the VA-RP tends to be the prior that maximizes the mutual information for a fixed value of $N$, within a family of priors that is, by design, parameterized by $\lambda$. Since we are aware of those approximations, we strive to assess that our priors are good approximations of the target priors in our numerical experiments.]{style="color:green;"}
+According to this comparison, implicit sampling is, in the worst case, competitive with the other methods, but achieves state-of-the-art results in the best case. Hence, computing the variational approximation of the RP, which we will refer to as the VA-RP, seems to be a promising technique. [We admit that the term VA-RP is a slight abuse of terminology in our case since (i) the target prior is the (eventually constrained) Jeffreys prior, which is not necessarily the reference prior when an ordering is imposed on the parameters; and (ii) there is no guarantee that this target prior can be actually reproduced by the neural network. Indeed, the VA-RP tends to be the prior that maximizes the mutual information for a fixed value of $N$, within a family of priors that is, by design, parameterized by $\lambda$. Since we are aware of those approximations, we strive to assess that our priors are good approximations of the target priors in our numerical experiments.]{style="color:green;"}
 
 The situations presented by @gauchy_var_rp and  @nalisnick2017learning are in dimension one and use the Kullback-Leibler divergence within the definition of the mutual information. 
 
 The construction of the algorithm that we propose in the following accommodates multi-dimensional modeling. It is also compatible with the extended form of the mutual information, as defined in @eq-mutualinfo from an $f$-divergence.
 
-The choice of the neural network is up to the user, we will showcase in our numerical applications simple networks, composed of one fully connected linear layer and one activation function. However, the method can be used with deeper networks, such as normalizing flows @papamakarios2021nf, or larger networks obtained through a mixture model of smaller networks utilizing the ``Gumbel-Softmax trick'' @jang2017categorical for example. Such choices lead to more flexible parametric distributions, but increase the difficulty of fine-tuning hyperparameters.
+The choice of the neural network is up to the user, we will showcase in our numerical applications mostly simple networks, composed of one fully connected linear layer and one activation function. However, the method can be used with deeper networks, such as normalizing flows (@papamakarios2021nf), or larger networks obtained through a mixture model of smaller networks utilizing the "Gumbel-Softmax trick" (@jang2017categorical) for example. Such choices lead to more flexible parametric distributions, but increase the difficulty of fine-tuning hyperparameters.
 
 
 ## Learning the VA-RP using stochastic gradient algorithm  {#sec-sga}
@@ -203,17 +243,20 @@ where $\pi_\lambda$ is parameterized through the relation between a latent varia
 
 It is intuitive to fix $\mathcal{O}_{\rD_f}$ to equal $I_{\rD_f}$, in order to maximize the mutual information of interest.
 In this Section, we suggest alternative objective functions that can be considered to compute the VA-RP.
-Our method is adaptable to any objective function $\mathcal{O}_{\rD_f}$  admitting a gradient w.r.t. $\lambda=(\lambda_1,\dots,\lambda_L)$ that takes the form
+[Our method is adaptable to any objective function $\mathcal{O}_{\rD_f}$ that satisfies the following definition.]{style="color:orange;"}
+
+[**Definition 1**. An objective function $\mathcal{O}_{\rD_f}:\lambda\in\Lambda\mapsto\mathcal{O}_{\rD_f}(\pi_\lambda;L_N)\in\mathbb{R}$ is said to be admissible if there exists a mapping $\tilde{\mathcal{O}}_{\rD_f}:\Theta\to\mathbb{R}$ such that the gradient of $\mathcal{O}_{\rD_f}$ w.r.t. $\lambda=(\lambda_1,\dots,\lambda_L)$ is ]{style="color:orange;"}
 $$
     \frac{\partial \mathcal{O}_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) = \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q\frac{\partial \tilde{\mathcal{O}}_{\rD_f}}{\partial \theta_j}(g(\lambda,\varepsilon))\frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right]
-$$ {#eq-compatible_objective_function}
-for any $l\in\{1,\dots,L\}$, where  $\tilde{\mathcal O}_{\rD_f}$ is independent of $\lambda$.
-This framework allows for flexible implementation, as it permits the separation of sampling and differentiation operations:
+$$ {#eq-compatible_objective_function} 
+[for any $l\in\{1,\dots,L\}$.]{style="color:orange;"}
+
+[Here, $\tilde{\mathcal O}_{\rD_f}$ is a generic notation for a function that depends in practice on $f$ and the likelihood function. We also assume that its gradient is computed using Monte Carlo sampling. The framework of admissible objective functions]{style="color:orange;"} allows for flexible implementation, as it permits the separation of sampling and differentiation operations:
 
 - The gradient of $\tilde{\mathcal{O}}_{\rD_f}$ mostly relies on random sampling and depends only on the likelihood $L_N$ and the function $f$.
 - The gradient of $g$ is
     computed independently. In practice, 
-    it is possible to leverage usual  differentiation techniques for the neural network.  In our work, we rely on PyTorch's automatic differentiation feature ``autograd'' @torch2019.
+    it is possible to leverage usual  differentiation techniques for the neural network.  In our work, we rely on PyTorch's automatic differentiation feature "autograd" (@torch2019).
 
 This separation is advantageous as  automatic differentiation tools ---such as autograd--- are well-suited to differentiating complex networks but struggle with functions incorporating randomness.
 
@@ -221,26 +264,27 @@ This way, the optimization problem can be addressed using stochastic gradient op
 In our experiments, the implementation of the algorithm is done with the popular Adam optimizer (@kingma2017adam), with its default hyperparameters, $\beta_1=0.9$ and $\beta_2=0.999$. The learning rate is tuned more specifically for each numerical benchmark.
 
 
-Concerning the choice of objective function, we verify that $I_{\rD_f}$ is compatible with our method by computing its gradient:
+Concerning the choice of objective function, we verify that in appendix @sec-grad_comp [that the mutual information $I_{\rD_f}$ is an admissible objective function. Its gradient equals the following:]{style="color:orange;"}
 $$
 \begin{aligned}
-\frac{\partial I_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) & = \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q\frac{\partial \tilde{I}}{\partial \theta_j}(g(\lambda,\varepsilon))\frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right] \\
-& + \mathbb{E}_{\theta \sim \pi_{\lambda}}\left[ \mathbb{E}_{\bX \sim L_N(\cdot |\theta)}\left[ \frac{1}{L_N(\bX \,|\,\theta)} \frac{\partial p_{\lambda}}{\partial \lambda_l}(\bX)f'\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)}\right)\right]  \right],
+\frac{\partial I_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) &= \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q
+F_j\cdot \frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right] \\
+&+ \mathbb{E}_{\theta \sim \pi_{\lambda}}\left[ \mathbb{E}_{\bX \sim L_N(\cdot |\theta)}\left[ \frac{1}{L_N(\bX \,|\,\theta)} \frac{\partial p_{\lambda}}{\partial \lambda_l}(\bX)f'\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)}\right)\right]  \right],
 \end{aligned}
 $$ {#eq-gradientIdf}
 where:
 $$
-    \frac{\partial \tilde{I}}{\partial \theta_j}(\theta) = \mathbb{E}_{\bX \sim L_N(\cdot \,|\,\theta)}\left[ \frac{\partial \log L_N}{\partial \theta_j}(\bX \,| \,\theta)F \left(\frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)} \right)  \right], 
+   F_j = \mathbb{E}_{\bX \sim L_N(\cdot \,|\,\theta)}\left[ \frac{\partial \log L_N}{\partial \theta_j}(\bX \,| \,\theta)F \left(\frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)} \right)  \right], 
 $$
 with $F(x) = f(x)-xf'(x)$ and $p_{\lambda}$ is a shortcut notation for $p_{\pi_{\lambda}, N}$ being the marginal distribution under $\pi_{\lambda}$.
-In @sec-grad_comp, we provide a detailed derivation of the above equation and show that the second term can be developed to align with the form of @eq-compatible_objective_function.
+
 Remark that only the case $f=-\log$ is considered by @gauchy_var_rp, but it leads to a simplification of the gradient since the second term vanishes.
 Each term in the above equations is approximated as follows:
 $$
  \begin{cases} \displaystyle
      p_{\lambda}(\bX) = \mathbb{E}_{\theta \sim \pi_{\lambda}}[L_N(\bX \, | \, \theta)] \approx \frac{1}{T} \sum_{t=1}^T L_N(\bX \, | \, g(\lambda, \varepsilon_t)) \quad \text{where} \quad \varepsilon_1,...\,, \varepsilon_T \sim \mathbb{P}_{\varepsilon} \\
 \displaystyle
-     \frac{\partial \tilde{I}}{\partial \theta_j}(\theta) \approx \frac{1}{U} \sum_{u=1}^{U} \frac{\partial \log L_N}{\partial \theta_j}(\bX^u \,| \,\theta)F \left(\frac{p_{\lambda}(\bX^u)}{L_N(\bX^u \,|\, \theta)} \right) \quad \text{where} \quad \bX^1,...\,,\bX^{U} \sim \mathbb{P}_{\bX|\theta}
+     F_j \approx \frac{1}{U} \sum_{u=1}^{U} \frac{\partial \log L_N}{\partial \theta_j}(\bX^u \,| \,\theta)F \left(\frac{p_{\lambda}(\bX^u)}{L_N(\bX^u \,|\, \theta)} \right) \quad \text{where} \quad \bX^1,...\,,\bX^{U} \sim \mathbb{P}_{\bX|\theta}
 .\end{cases}  
 $$ {#eq-MCgradI}
 
@@ -253,13 +297,17 @@ $$
 where $\hat{\theta}_{MLE}$ being the maximum likelihood estimator (MLE). 
 It only depends on the likelihood and not on $\lambda$ which simplifies the gradient computation: 
 $$
-\frac{\partial B_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) = \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q\frac{\partial \tilde{B}}{\partial \theta_j}(g(\lambda,\varepsilon))\frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right], 
+\frac{\partial B_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) = \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q\frac{\partial \tilde{B}_{\rD_f}}{\partial \theta_j}(g(\lambda,\varepsilon))\frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right], 
 $$
 where: 
 $$ 
-\frac{\partial \tilde{B}}{\partial \theta_j}(\theta) = \mathbb{E}_{\bX \sim L_N(\cdot \,|\,\theta)}\left[ \frac{\partial \log L_N}{\partial \theta_j}(\bX \,|\, \theta)F \left(\frac{L_N(\bX\,| \,\hat{\theta}_{MLE})}{L_N(\bX \,|\,\theta)} \right)  \right]. 
+\frac{\partial \tilde{B}_{\rD_f}}{\partial \theta_j}(\theta) = \mathbb{E}_{\bX \sim L_N(\cdot \,|\,\theta)}\left[ \frac{\partial \log L_N}{\partial \theta_j}(\bX \,|\, \theta)F \left(\frac{L_N(\bX\,| \,\hat{\theta}_{MLE})}{L_N(\bX \,|\,\theta)} \right)  \right]. 
 $$
-Its form corresponds to the one expressed in @eq-compatible_objective_function.
+Its form corresponds to the one of [an admissible objective function (@eq-compatible_objective_function), with:]{style="color:orange;"} 
+[
+$$
+\tilde{B}_{\rD_f}(\theta) = \int_{\mathcal{X}^N} L_N(\bX \, | \, \theta)f\left( \frac{L_N(\bX\,| \,\hat{\theta}_{MLE})}{L_N(\bX \, | \, \theta)}\right) d\bX.
+$$ ]{style="color:orange;"}
 
 Given that  $p_{\lambda}(\bX) \leq \max_{\theta' \in \Theta} L_N(\bX \,|\, \theta') = L_N(\bX\,|\,\hat{\theta}_{MLE})$ for all $\lambda$, we have  $B_{\rD_f}(\pi_{\lambda}; L_N) \leq I_{\rD_f}(\pi_{\lambda};L_N)$.
 
@@ -268,6 +316,7 @@ Since $f_\alpha$, used in $\alpha$-divergence (@eq-falpha), is not decreasing, w
 $$
   \hat{f}_{\alpha}(x) = \frac{x^{\alpha}-1}{\alpha(\alpha-1)} = f_{\alpha}(x) + \frac{1}{\alpha-1}(x-1) .
 $$
+
 The use of this function results in a more stable computation overall.
 Moreover, one argument for the use of $\alpha$-divergences rather that the KL-divergence, is that we have an universal and explicit upper bound on the mutual information: 
 $$
@@ -279,8 +328,7 @@ The gradient of the objective function $B_{\rD_f}$ can be approximated via Monte
 
 It requires to compute the MLE, which can also be done using samples of $\varepsilon$: 
 $$
-L_N(\bX \, | \, \hat{\theta}_{MLE}) \approx \max_{t\in\{1,\dots,T\}} L_N(\bX \, | \, g(\lambda, \varepsilon_t)) \quad \text{where} \quad \varepsilon_1,..., \varepsilon_T \sim \mathbb{P}_{\varepsilon}. 
-$$
+L_N(\bX \, | \, \hat{\theta}_{MLE}) \approx \max_{t\in\{1,\dots,T\}} L_N(\bX \, | \, g(\lambda, \varepsilon_t)) \quad \text{where} \quad \varepsilon_1,..., \varepsilon_T \sim \mathbb{P}_{\varepsilon}. $$
 
 
 ## Adaptation for the constrained VA-RP
@@ -292,7 +340,7 @@ This is also a way to incorporate expert knowledge to some extent. We consider $
 $$
  \forall \, k \in \{1,\ldots,K\} \text{,}\, \,   \, \mathcal{C}_k(\pi_{\lambda}) = \mathbb{E}_{\theta \sim \pi_{\lambda}} \left[ a_k(\theta) \right] - b_k,
 $$
-with $a_k$ : $\Theta \mapsto \mathbb{R}^+$ integrable and linearly independent functions, and $b_k \in \mathbb{R}$. We then adapt the optimization problem in @eq-opti_pb_pilambda to propose the following constrained optimization problem:
+with $a_k$: $\Theta \mapsto \mathbb{R}^+$ integrable and linearly independent functions, and $b_k \in \mathbb{R}$. We then adapt the optimization problem in @eq-opti_pb_pilambda to propose the following constrained optimization problem:
 $$
 \begin{aligned}
 & \pi^C_{\lambda^\ast} \in \underset{\lambda \in \Lambda}{\operatorname{argmax}} \, \mathcal{O}_{\rD_f}(\pi_{\lambda}; L_N) \\
@@ -336,7 +384,7 @@ $$
  \mathbb{E}_{\theta \sim \tilde\pi^\ast}[a(\theta)] = \int_{\Theta} \tilde\pi^\ast(\theta)a(\theta)d\theta = \frac{1}{\mathcal{K}}\int_{\Theta}J(\theta)a(\theta)^{1+(1/\alpha)}d\theta  = \frac{c}{\mathcal{K}},  
 $$
 
-we compute the constrained VA-RP using the constraint : $\mathbb{E}_{\theta \sim \pi_{\lambda'}}[a(\theta)] = c_{\lambda} / \mathcal{K}_{\lambda}$ to approximate $\pi_{\lambda'} \approx \tilde\pi^\ast$.
+we compute the constrained VA-RP using the constraint: $\mathbb{E}_{\theta \sim \pi_{\lambda'}}[a(\theta)] = c_{\lambda} / \mathcal{K}_{\lambda}$ to approximate $\pi_{\lambda'} \approx \tilde\pi^\ast$.
 
 One might use different variational approximations for $\pi_{\lambda}$ and $\pi_{\lambda'}$ because $J$ and $\tilde\pi^\ast$ could have very different forms depending on the function $a$.
 
@@ -355,7 +403,7 @@ This motivates the definition of the augmented Lagrangian:
 $$  
 \mathcal{L}_A(\lambda, \eta, \tilde{\eta}) = \mathcal{O}_{\rD_f}(\pi_{\lambda}; L_N) + \sum_{k=1}^K \eta_k \mathcal{C}_k(\pi_{\lambda}) - \sum_{k=1}^K \frac{\tilde{\eta}_k}{2} \mathcal{C}_k(\pi_{\lambda})^2 .
 $$
-Its gradient has a form that  which is compatible with our algorithm, as depicted in @sec-sga (see @eq-compatible_objective_function):
+Its gradient has a form that is compatible with our algorithm, as depicted in @sec-sga (see @eq-compatible_objective_function):
 
 $$
 \begin{aligned}
@@ -375,34 +423,34 @@ In our implementation, $\eta$ is updated every $100$ epochs. The penalty paramet
 
 ## Posterior sampling using implicitly defined prior distributions {#sec-posterio-sampling}
 
-Although our main object of study is the prior distribution, one needs to find the posterior distribution given an observed dataset $\bX$ in order to do the inference on $\theta$. The posterior is of the form : 
+Although our main object of study is the prior distribution, one needs to find the posterior distribution given an observed dataset $\bX$ in order to do the inference on $\theta$. The posterior is of the form: 
 $$
 \pi_{\lambda}(\theta \, | \, \bX) = \frac{\pi_{\lambda}(\theta)L_N(\bX \, | \, \theta)}{p_{\lambda}(\bX)} . 
 $$
 As discussed in the introduction, one can approximate the posterior distribution when knowing the prior either by using MCMC or variational inference. In both cases, knowing the marginal distribution is not required. Indeed,  MCMC samplers inspired by the Metropolis-Hastings algorithm can be applied, even if the posterior distribution is only known up to a multiplicative constant. The same can be said for variational approximation since the ELBO can be expressed without the marginal. 
 
-The issue here is that the density function $\pi_{\lambda}(\theta)$ is not explicit and can not be evaluated, except for very simple cases. However, we imposed that the distribution of the variable $\varepsilon$ is simple enough so one is able to evaluate its density. We propose to use $\varepsilon$ as the variable of interest instead of $\theta$ because it lets us circumvent this issue. In practice, the idea is to reverse the order of operations : instead of sampling $\varepsilon$, then transforming $\varepsilon$ into $\theta$, which defines the prior on $\theta$, and finally sampling posterior samples of $\theta$ given $X$, one can proceed as follows : 
+The issue here is that the density function $\pi_{\lambda}(\theta)$ is not explicit and can not be evaluated, except for very simple cases. However, we imposed that the distribution of the variable $\varepsilon$ is simple enough, so one is able to evaluate its density. We propose to use $\varepsilon$ as the variable of interest instead of $\theta$ because it lets us circumvent this issue. In practice, the idea is to reverse the order of operations: instead of sampling $\varepsilon$, then transforming $\varepsilon$ into $\theta$, which defines the prior on $\theta$, and finally sampling posterior samples of $\theta$ given $X$, one can proceed as follows: 
 
 
-- Define the posterior distribution on $\varepsilon$ : 
+- Define the posterior distribution on $\varepsilon$: 
 $$
 \pi_{\varepsilon,\lambda}(\varepsilon \, | \, \bX) = \frac{p_{\varepsilon}(\varepsilon)L_N(\bX\, | \, g(\lambda, \varepsilon))}{p_{\lambda}(\bX)} \ , 
 $$
-where $p_{\varepsilon}$ is the probability density function of $\varepsilon$. $\pi_{\varepsilon,\lambda}(\varepsilon \, | \, \bX)$ is known up to a multiplicative constant since the marginal $p_{\lambda}$ is intractable in general. It is indeed a probability distribution on $\mathbb{R}^p$ because : 
+where $p_{\varepsilon}$ is the probability density function of $\varepsilon$. $\pi_{\varepsilon,\lambda}(\varepsilon \, | \, \bX)$ is known up to a multiplicative constant since the marginal $p_{\lambda}$ is intractable in general. It is indeed a probability distribution on $\mathbb{R}^p$ because: 
 $$
 p_{\lambda}(\bX) = \int_{\Theta} \pi_{\lambda}(\theta)L_N(\bX \, | \, \theta)d\theta = \int_{\mathbb{R}^p} L_N(\bX\, | \, g(\lambda, \varepsilon)) d\mathbb{P}_{\varepsilon} 
 $$
 
 - Sample posterior $\varepsilon$ samples from the previous distribution, approximated by MCMC or variational inference. 
 
-- Apply the transformation $\theta = g(\lambda, \varepsilon)$, and one gets posterior $\theta$ samples :  $\theta \sim \pi_{\lambda}(\cdot \, | \, \bX)$.
+- Apply the transformation $\theta = g(\lambda, \varepsilon)$, and one gets posterior $\theta$ samples:  $\theta \sim \pi_{\lambda}(\cdot \, | \, \bX)$.
 
-More precisely, we denote for a fixed dataset $\bX$ : 
+More precisely, we denote for a fixed dataset $\bX$: 
 $$
  \theta \sim  \tilde{\pi}_{\lambda}(\cdot \, | \, \bX) \iff \theta = g(\lambda, \varepsilon) \quad \text{with} \quad \varepsilon \sim \pi_{\varepsilon,\lambda}(\cdot \, | \, \bX). 
 $$
 
-The previous approach is valid because $\pi_{\lambda}(\cdot \, | \, \bX)$ and $\tilde{\pi}_{\lambda}(\cdot \, | \, \bX)$ lead to the same distribution, as proven by the following derivation : let $\varphi$ be a bounded and measurable function on $\Theta$. 
+The previous approach is valid because $\pi_{\lambda}(\cdot \, | \, \bX)$ and $\tilde{\pi}_{\lambda}(\cdot \, | \, \bX)$ lead to the same distribution, as proven by the following derivation: let $\varphi$ be a bounded and measurable function on $\Theta$. 
 
 Using the definitions of the different distributions, we have that: 
 $$
@@ -416,7 +464,7 @@ $$
 $$
 As mentioned in the last Section, when the [Jeffreys prior]{style="color:green;"} is improper, we compare the posterior distributions, namely, the exact reference posterior when available and the posterior obtained from the VA-RP using the previous method. Altogether, we are able to sample $\theta$ from the posterior even if the density of the parametric prior $\pi_{\lambda}$ on $\theta$ is unavailable due to an implicit definition of the prior distribution. 
 
-For our computations, we choose MCMC sampling, namely an adaptive Metropolis-Hastings sampler with a multivariate Gaussian as the proposition distribution. The adaptation scheme is the following:  for each batch of iterations, we monitor the acceptance rate and we adapt the variance parameter of the Gaussian proposition in order to have an acceptance rate close to 40\%, which is the advised value @gelman2013 for models in small dimensions. We refer to this algorithm as MH($\varepsilon$). Because we apply MCMC sampling on variable $\varepsilon \in \mathbb{R}^p$ with a reasonable value for $p$, we expect this step of the algorithm to be fast compared to the computation of the VA-RP. 
+For our computations, we choose MCMC sampling, namely an adaptive Metropolis-Hastings sampler with a multivariate Gaussian as the proposition distribution. The adaptation scheme is the following:  for each batch of iterations, we monitor the acceptance rate and we adapt the variance parameter of the Gaussian proposition in order to have an acceptance rate close to $40\%$, which is the advised value (@gelman2013) for models in small dimensions. We refer to this algorithm as MH($\varepsilon$). Because we apply MCMC sampling on variable $\varepsilon \in \mathbb{R}^p$ with a reasonable value for $p$, we expect this step of the algorithm to be fast compared to the computation of the VA-RP. 
 
 One could also use classic variational inference on $\varepsilon$ instead, but the parametric set of distributions must be chosen wisely. In VAEs for instance, multivariate Gaussian are often considered since it simplifies the KL-divergence term in the ELBO. However, this might be too simplistic in our case since we must apply the neural network $g$ to recover $\theta$ samples. This means that the approximated posterior on $\theta$ belongs to a very similar set of distributions to those used for the VA-RP, since we already used a multivariate Gaussian for the prior on $\varepsilon$. On the other hand, applying once again the implicit sampling approach does not exploit the additional information we have on $\pi_{\varepsilon, \lambda}(\varepsilon \, | \, \bX)$ compared to $\pi_{\lambda}(\theta)$, specifically, that its density function is known up to a multiplicative constant. Hence, we argue that using a Metropolis-Hastings sampler is more straightforward in this situation.
 
@@ -436,8 +484,8 @@ For the initialization of the neural networks, biases are set to zero and weight
 
 ## Multinomial model
 
-The multinomial distribution can be interpreted as the generalization of the binomial distribution for higher dimensions. We denote : 
-$X_i \sim \text{Multinomial}(n,(\theta_1,...,\theta_q))$ with $n \in \mathbb{N}^*$, $\bX \in \mathcal{X}^N$ and $\theta \in \Theta$, with : $\mathcal{X} = \{ X \in \{0,...,n\}^q \, | \, \sum_{j = 1}^q X^j = n \}$ and 
+The multinomial distribution can be interpreted as the generalization of the binomial distribution for higher dimensions. We denote: 
+$X_i \sim \text{Multinomial}(n,(\theta_1,...,\theta_q))$ with $n \in \mathbb{N}^*$, $\bX \in \mathcal{X}^N$ and $\theta \in \Theta$, with: $\mathcal{X} = \{ X \in \{0,...,n\}^q \, | \, \sum_{j = 1}^q X^j = n \}$ and 
 $\Theta = \{ \theta \in (0,1)^q \, | \, \sum_{j = 1}^q \theta_j = 1  \}$. We use $n=10$ and $q=\text{dim}(\theta)=4$.
 
 The likelihood function and the gradient of its logarithm are:
@@ -449,23 +497,25 @@ $$
  \forall (i,j), \,  \frac{\partial \log L}{\partial \theta_j}(X_i\,|\,\theta) = \frac{X_i^j}{\theta_j}. 
 $$
 
-The MLE is available : $\forall j, \, \hat{\theta}_{MLE}(j) = \frac{1}{nN}\sum_{i=1}^N X_i^j$ and the Jeffreys prior is the $\text{Dir}_q \left(\frac{1}{2}, ... , \frac{1}{2} \right)$ distribution, which is proper. The Jeffreys posterior is a conjugate Dirichlet distribution: 
+The MLE is available: $\forall j, \, \hat{\theta}_{MLE}(j) = \frac{1}{nN}\sum_{i=1}^N X_i^j$ and the Jeffreys prior is the $\text{Dir}_q \left(\frac{1}{2}, ... , \frac{1}{2} \right)$ distribution, which is proper. The Jeffreys posterior is a conjugate Dirichlet distribution: 
 $$
 J_{post}(\theta \, | \, \bX) = \text{Dir}_q(\theta; \gamma) \quad \text{with} \quad \gamma_j = \frac{1}{2} + \sum_{i=1}^N X_i^j .
 $$
-We recall that the probability density function of a Dirichlet distribution is the following: 
+We recall that the probability density function of a Dirichlet distribution of parameter $\gamma$ is the following: 
 $$
  \text{Dir}_q(x; \gamma) = \frac{\Gamma(\sum_{j=1}^q \gamma_j)}{\prod_{j=1}^q \Gamma(\gamma_j)} \prod_{j=1}^q x_j^{\gamma_j - 1}.  
 $$
 
-[Although the Jeffreys prior is the prior that maximizes the mutual information, @berger1992ordered, @berger2015 argue that other priors for the multinomial model are more suited in terms of non-informativeness as the dimension of $\theta$ increases. According to them, an appropriate reference prior is the $m$-group reference prior, where the parameters are grouped into $m$ groups on which a specific ordering is imposed ($1\leq m \leq q$). The Jeffreys prior is the 1-group reference prior with this definition, while the authors suggest that the $q$-group one is more appropriate. Nevertheless, our approach consists in approximating the prior yielding the highest mutual information when no ordering is imposed on the parameters, hence, the Jeffreys prior is still the target prior in this regard.]{style="color:green;"}
+[We also use the fact that the marginal distributions of the Dirichlet distribution are Beta distributions, i.e., if $x \sim \text{Dir}_q(\gamma)$, then, for every $j \in \{ 1,\dots, q\}, x_j \sim \text{Beta}(\gamma_j, \sum_{k \neq j} \gamma_k)$. The Beta distribution can be seen as a particular case of Dirichlet distribution of dimension $q=2$.]{style="color:orange;"}
 
-We opt for a simple neural network with one linear layer and a Softmax activation function assuring that all components are positive and sum to 1. Explicitly, we have that: 
+[Although the Jeffreys prior is the prior that maximizes the mutual information, @berger1992ordered and @berger2015 argue that other priors for the multinomial model are more suited in terms of non-informativeness as the dimension of $\theta$ increases. According to them, an appropriate prior is the $m$-group reference prior, where the parameters are grouped into $m$ groups on which a specific ordering is imposed ($1\leq m \leq q$). The Jeffreys prior is the $1$-group reference prior with this definition, while the authors suggest that the $q$-group one is more appropriate. Nevertheless, our approach consists in approximating the prior yielding the highest mutual information when no ordering is imposed on the parameters, hence, the Jeffreys prior is still the target prior in this regard.]{style="color:green;"}
+
+We opt for a simple neural network with one linear layer and a Softmax activation function assuring that all components are positive and sum to $1$. Explicitly, we have that: 
 $$
-\theta = \text{Softmax}(W^{\top}\varepsilon + b),  
+\theta = \text{Softmax}(W\varepsilon + b),  
 $$
 
-with $W \in \mathbb{R}^{p,4}$ the weight matrix and $b \in \mathbb{R}^4$ the bias vector. The density function of $\theta$ does not have a closed expression. The following results are obtained with $\alpha=0.5$ for the divergence and the lower bound is used as the objective function.
+with $W \in \mathbb{R}^{4 \times p}$ the weight matrix and $b \in \mathbb{R}^4$ the bias vector. The density function of $\theta$ does not have a closed expression. The following results are obtained with $\alpha=0.5$ for the divergence and the lower bound is used as the objective function.
 
 ```{python python-code}
 
@@ -537,11 +587,20 @@ if not load_results_Multinom :
         jeffreys_post = jeffreys_post.numpy()
     theta_post = theta_MH[-n_samples_post:,:]
 
+    target_post_values = []
+    interv_post = np.linspace(0.001,0.999,10000)
+    gamma = (torch.tensor(q*[0.5]) + torch.sum(X, dim=0)).numpy()
+    for i in range(q):
+        a_i = gamma[i]
+        b_i = np.sum(gamma) - a_i
+        marginal_post = scipy.stats.beta.pdf(interv_post, a_i, b_i)
+        target_post_values.append(marginal_post)
+
     # Saves all relevant quantities
     
     Mutual_Info = {'values' : MI, 'range' : range_MI, 'lower' : lower_MI, 'upper' : upper_MI}
     Prior = {'samples' : theta_sample, 'jeffreys' : jeffreys_sample, 'params' : all_params}
-    Posterior = {'samples' : theta_post, 'jeffreys' : jeffreys_post}
+    Posterior = {'samples' : theta_post, 'jeffreys' : jeffreys_post, 'target' : target_post_values}
     Multinom_results = {'MI' : Mutual_Info, 'prior' : Prior, 'post' : Posterior}
     with open(file_path, 'wb') as file:
         pickle.dump(Multinom_results, file)
@@ -554,19 +613,17 @@ else :
         Posterior = res['post']
         MI, range_MI, lower_MI, upper_MI = MI_dic['values'], MI_dic['range'], MI_dic['lower'], MI_dic['upper']
         theta_sample, jeffreys_sample, all_params = Prior['samples'], Prior['jeffreys'], Prior['params']
-        theta_post, jeffreys_post = Posterior['samples'], Posterior['jeffreys']
+        theta_post, jeffreys_post, target_post_values = Posterior['samples'], Posterior['jeffreys'], Posterior['target']
 
 ```
 
 ```{python stem-plot}
 #| label: fig-multi_mi
-#| fig-cap: "Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from 200 samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the 95\\% confidence interval. The learning rate used in the optimization is $0.0025$."
+#| fig-cap: "Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from $200$ samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the $95\\%$ confidence interval. The learning rate used in the optimization is $0.0025$."
 
 plt.figure(figsize=(5, 3))
 plt.plot(range_MI, MI, '-', color=rougeCEA)
 plt.plot(range_MI, MI, '*', color=rougeCEA)
-# for i in range(len(range_MI)):
-#     plt.plot([range_MI[i], range_MI[i]], [lower_MI[i], upper_MI[i]], color='lightgrey')
 plt.plot(range_MI, upper_MI, '-', color='lightgrey')
 plt.plot(range_MI, lower_MI, '-', color='lightgrey')
 plt.fill_between(range_MI, lower_MI, upper_MI, color='lightgrey', alpha=0.5)
@@ -580,15 +637,18 @@ plt.show()
 
 ```{python stem-plot}
 #| label: fig-multi_prior
-#| fig-cap: "Histograms of the fitted prior and the Jeffreys prior Dir$(\\frac{1}{2},\\frac{1}{2},\\frac{1}{2},\\frac{1}{2})$ for each dimension of $\\theta$, each one is obtained from $10^5$ samples."
+#| fig-cap: "Histograms of the fitted prior and the marginal density functions of the Jeffreys prior Dir$(\\frac{1}{2},\\frac{1}{2},\\frac{1}{2},\\frac{1}{2})$ for each dimension of $\\theta$, each histogram is obtained from $10^5$ samples."
+
+interv_prior = np.linspace(0.001,0.999,10000)
+marginal_prior = scipy.stats.beta.pdf(interv_prior, 0.5, (q-1)*0.5)
 
 fig, axs = plt.subplots(1, q, figsize=(15, 4))  
 for i in range(q):
-    #axs[i].hist(theta_sample_init[:, i], density=True, bins="rice", color="red", label=r"Initial prior", alpha=0.4)
     #axs[i].hist(theta_sample[:,i], density=True, bins="rice", label=r"Fitted prior", alpha=0.8, color='red', linewidth=1.2)
     axs[i].hist(theta_sample[:,i], density=True, bins="rice", label=r"Fitted prior", alpha=0.4)
     #axs[i].hist(jeffreys_sample[:,i], density=True, bins="rice", label="Jeffreys", alpha=0.6, color='blue', linewidth=1.2)
-    axs[i].hist(jeffreys_sample[:,i], density=True, bins="rice", label="Jeffreys", alpha=0.4, color=vertCEA)
+    #axs[i].hist(jeffreys_sample[:,i], density=True, bins="rice", label="Jeffreys", alpha=0.4, color=vertCEA)
+    axs[i].plot(interv_prior, marginal_prior, color=vertCEA, label="Jeffreys prior")
     axs[i].set_xlabel(r"$\theta_{}$".format(i+1))  
     axs[i].grid()
     axs[i].legend(fontsize=16)
@@ -597,20 +657,24 @@ plt.show()
 ```
 
 
-For the posterior distribution, we sample 10 times from the Multinomial distribution using $\theta_{true} = (\frac{1}{4},\frac{1}{4},\frac{1}{4},\frac{1}{4})$. The covariance matrix in the proposition distribution of the Metropolis-Hastings algorithm is not diagonal, since we have a relation between the different components of $\theta$, we introduce non-zero covariances. We also verified that the auto-correlation between the successive remaining samples of the Markov chain decreases rapidly on each component.
+For the posterior distribution, we sample $10$ times from the Multinomial distribution using $\theta_{true} = (\frac{1}{4},\frac{1}{4},\frac{1}{4},\frac{1}{4})$. The covariance matrix in the proposition distribution of the Metropolis-Hastings algorithm is not diagonal, since we have a relation between the different components of $\theta$, we introduce non-zero covariances. We also verified that the auto-correlation between the successive remaining samples of the Markov chain decreases rapidly on each component.
 
 
 ```{python stem-plot}
 #| label: fig-multi_post
-#| fig-cap: "Histograms of the fitted posterior and the Jeffreys posterior for each dimension of $\\theta$, each one is obtained from $5\\cdot10^4$ samples."
+#| fig-cap: "Histograms of the fitted posterior and the marginal density functions of the Jeffreys posterior for each dimension of $\\theta$, each histogram is obtained from $5\\cdot10^4$ samples."
+
+interv_post = np.linspace(0.001,0.999,10000)
 
 fig, axs = plt.subplots(1, q, figsize=(15, 4))
 for i in range(q): 
-    axs[i].hist(jeffreys_post[:,i], density=True, bins="rice", label=r"Fitted post", alpha=0.4)
-    axs[i].hist(theta_post[:,i], density=True, bins="rice", label=r"Jeffreys", alpha=0.4,color=vertCEA)
+    axs[i].hist(jeffreys_post[:,i], density=True, bins="rice", label=r"Fitted post.", alpha=0.4)
+    #axs[i].hist(theta_post[:,i], density=True, bins="rice", label=r"Jeffreys", alpha=0.4,color=vertCEA)
+    axs[i].plot(interv_post, target_post_values[i], color=vertCEA, label="Jeffreys post.")
     axs[i].grid()
-    axs[i].legend(fontsize=12)
+    axs[i].legend(fontsize=12, loc='upper right')
     axs[i].set_xlabel(r"$\theta_{}$".format(i+1))
+    axs[i].set_xlim(0,0.6)
 plt.tight_layout()
 plt.show()
 ```
@@ -620,50 +684,25 @@ We notice (@fig-multi_mi) that the mutual information lies between $0$ and $1/\a
 
 Although the shape of the fitted prior resembles the one of the Jeffreys prior, one can notice that it tends to put more weight towards the extremities of the interval (@fig-multi_prior). The posterior distribution however is quite similar to the target Jeffreys posterior on every component (@fig-multi_post).
 
-Since the multinomial model is simple and computationally practical, we would like to quantify the effect of the divergence with different $\alpha$ values on the output of the algorithm. In order to do so, we utilize the maximum mean discrepancy (MMD) defined as : 
+Since the multinomial model is simple and computationally practical, we would like to quantify the effect [on the output of the algorithm of some hyperparameters, namely, the divergence parameter $\alpha$, the dimension of the latent space $p$ and the addition of a hidden layer in the neural network.]{style="color:orange;"} In order to do so, we utilize the maximum mean discrepancy (MMD) defined as: 
 $$
-   \text{MMD}(p,q) = || \mu_{p} - \mu_{q} ||_{\mathcal{H}},  
+   \text{MMD}(\mathbb{P},\mathbb{Q}) = || \mu_{\mathbb{P}} - \mu_{\mathbb{Q}} ||_{\mathcal{H}},  
 $$
 
-where $\mu_{p}$ and $\mu_{q}$ are respectively the kernel mean embeddings of distributions $p$ and $q$ in a reproducible kernel Hilbert space (RKHS) $(\mathcal{H}, || \cdot ||_{\mathcal{H}})$, meaning : $\mu_p(\theta') = \mathbb{E}_{\theta \sim p }[K(\theta,\theta')]$ for all $\theta' \in \Theta$ and $K$ being the kernel. The MMD is used for instance in the context of two-sample tests @gretton_mmd, whose purpose is to compare distributions. We use in our computations the Gaussian or RBF kernel : 
+where $\mu_{\mathbb{P}}$ and $\mu_{\mathbb{Q}}$ are respectively the kernel mean embeddings of distributions $\mathbb{P}$ and $\mathbb{Q}$ in a reproducible kernel Hilbert space (RKHS) $(\mathcal{H}, || \cdot ||_{\mathcal{H}})$, meaning: $\mu_\mathbb{P}(\theta') = \mathbb{E}_{\theta \sim \mathbb{P} }[K(\theta,\theta')]$ for all $\theta' \in \Theta$ and $K$ being the kernel. The MMD is used for instance in the context of two-sample tests (@gretton_mmd), whose purpose is to compare distributions. We use in our computations the Gaussian or RBF kernel: 
 $$
   K(\theta, \theta') = \exp(-0.5 \cdot ||\theta - \theta'||_2^2), 
 $$ 
 for which the MMD is a metric, this means that the following implication: 
 $$
- \text{MMD}(p,q) = 0 \implies p = q 
+ \text{MMD}(\mathbb{P},\mathbb{Q}) = 0 \implies \mathbb{P} = \mathbb{Q} 
 $$
 is verified with the other axioms. In practice, we consider an unbiased estimator of the MMD$^2$ given by: 
 $$
- \widehat{\text{MMD}^2}(p,q) =  \frac{1}{m(m-1)} \sum_{i \neq j}K(x_i,x_j) +  \frac{1}{n(n-1)} \sum_{i \neq j}K(y_i,y_j) - \frac{2}{mn} \sum_{i,j} K(x_i,y_j), 
+ \widehat{\text{MMD}^2}(\mathbb{P},\mathbb{Q}) =  \frac{1}{m(m-1)} \sum_{i \neq j}K(x_i,x_j) +  \frac{1}{n(n-1)} \sum_{i \neq j}K(y_i,y_j) - \frac{2}{mn} \sum_{i,j} K(x_i,y_j), 
 $$
 
-where $(x_1,...,x_m)$ and $(y_1,...,y_n)$ are samples from $p$ and $q$ respectively. In our case, $p$ is the distribution obtained through variational inference and $q$ is the target Jeffreys distribution. Since the MMD can be time-consuming or memory inefficient to compute in practice for very large samples, we consider only the last $2 \cdot 10^4$ entries of our priors and posterior samples.
-
-
-```{python stem-plot}
-compute_autocorr = False
-if compute_autocorr :
-    def autocorrelation(x, lag):
-        """Compute the autocorrelation of a 1D array at a given lag."""
-        x = np.asarray(x)
-        n = len(x)
-        x_mean = np.mean(x)
-        x_var = np.var(x)
-        if x_var == 0:
-            return 0 
-        return np.correlate(x - x_mean, x - x_mean, mode="full")[n - 1 + lag] / (n * x_var)
-    lags = 100 
-    autocorrs = {i: [autocorrelation(theta_post[:, i], lag) for lag in range(lags + 1)] for i in range(theta_post.shape[1])}
-
-    for i, ac in autocorrs.items():
-        plt.plot(ac, label=f'Component {i+1}')
-    plt.legend()
-    plt.xlabel('Lag')
-    plt.ylabel('Autocorrelation')
-    plt.grid()
-    plt.show()
-```
+where $(x_1,...,x_m)$ and $(y_1,...,y_n)$ are samples from $\mathbb{P}$ and $\mathbb{Q}$ respectively. In our case, $\mathbb{P}$ is the distribution obtained through variational inference and $\mathbb{Q}$ is the target Jeffreys distribution. Since the MMD can be time-consuming or memory inefficient to compute in practice for very large samples, we consider only the last $2 \cdot 10^4$ entries of our priors and posterior samples.
 
 
 ```{python python-code}
@@ -754,50 +793,55 @@ else :
 ```
 
 ```{python stem-plot}
-#| label: fig-mmd_multinom
-#| fig-cap: "MMD values for different $\\alpha$-divergences at prior and posterior levels. As a reference on the prior level, when computing the criterion between two independent Dirichlet Dir$(\\frac{1}{2},\\frac{1}{2},\\frac{1}{2},\\frac{1}{2})$ distributions (ie the Jeffreys prior) on $2 \\cdot 10^4$ samples, we obtain an order of magnitude of $10^{-3}$."
+#| label: tbl-mmd_multinom
+#| tbl-cap: "MMD values for different $\\alpha$-divergences at prior and posterior levels. As a reference on the prior level, when computing the criterion between two independent Dirichlet Dir$(\\frac{1}{2},\\frac{1}{2},\\frac{1}{2},\\frac{1}{2})$ distributions (i.e. the Jeffreys prior) on $2 \\cdot 10^4$ samples, we obtain an order of magnitude of $10^{-3}$. For the posterior level, for which the marginal densities do not diverge at zero, this reference has an order of magnitude of $10^{-4}$."
+#| tbl-cap-location: bottom
 
 data = np.column_stack((alphas, MMDvalues))
-#headers = ["α", "Prior", "Posterior"]
-headers = [r"$\alpha$", "Prior", "Posterior"]
+
 def format_scientific(value, decimals=2):
     """Format a float in LaTeX-style scientific notation."""
     formatted = f"{value:.{decimals}e}"  
     base, exp = formatted.split("e")  
     return f"${base} \\times 10^{{{int(exp)}}}$"
 
-formatted_data = [
-    [f"${row[0]:.2f}$", format_scientific(row[1]), format_scientific(row[2])]
-    for row in data
-]
-# formatted_data = [
-#     [f"{row[0]:.2f}", f"{row[1]:.2e}", f"{row[2]:.3e}"] for row in data
-# ]
-table_data = [headers] + formatted_data
-fig, ax = plt.subplots()
-ax.axis("off")  
-table = ax.table(
-    cellText=table_data,  
-    colLabels=None,      
-    loc="center",        
-    cellLoc="center",   
-)
-for (i, key) in enumerate(headers):
-    cell = table[0, i]  
-    cell.set_text_props(fontweight="bold")  
-    cell.set_facecolor("lightgray")  
-table.scale(1, 2.5)  
-table.auto_set_font_size(False)
-table.set_fontsize(12)
-plt.show()
+headers = ["$\\alpha$", "Prior", "Posterior"]
+rows = []
+for a, (p, q) in zip(alphas, MMDvalues):
+    rows.append([f"${a:.2f}$", format_scientific(p), format_scientific(q)])
+
+md_table = "| " + " | ".join(headers) + " |\n"
+md_table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+for row in rows:
+    md_table += "| " + " | ".join(row) + " |\n"
+from IPython.display import Markdown, display
+display(Markdown(md_table))
 ```
 
-According to @fig-mmd_multinom, the difference between $\alpha$ values in terms of the MMD criterion is essentially inconsequential. One remark is that the mutual information tends to be more unstable as $\alpha$ gets closer to $1$. The explanation is that when $\alpha$ tends to $1$, we have the approximation :
+[Firstly, we are interested in the effect of changing the value of $\alpha$ in the $\alpha$-divergence, while keeping $p=50$ and the same neural network architecture.]{style="color:orange;"} According to @tbl-mmd_multinom, the difference between $\alpha$ values in terms of the MMD criterion is essentially inconsequential. One remark is that the mutual information tends to be more unstable as $\alpha$ gets closer to $1$. The explanation is that when $\alpha$ tends to $1$, we have the approximation:
 $$
 \hat{f}_{\alpha}(x) \approx \frac{x-1}{\alpha(\alpha-1)} + \frac{x\log(x)}{\alpha},    
 $$
 
 which diverges for all $x$ because of the first term. Hence, we advise the user to avoid $\alpha$ values that are too close to $1$. In the following, we use $\alpha = 0.5$ for the divergence.
+
+[Secondly, we look at the effect on the dimension of the latent space denoted $p$ for the previously defined neural network architecture, but also when a second layer is added:]{style="color:orange;"}
+
+$$
+\theta = \text{Softmax}\left(W_2\cdot\text{PReLU}_\zeta(W_1\varepsilon + b_1) +b_2\right), 
+$$ 
+
+
+[with $W_1 \in \mathbb{R}^{10 \times p}$, $W_2 \in \mathbb{R}^{4\times 10}$ the weight matrices and $b_1 \in \mathbb{R}^{10}$, $b_2 \in \mathbb{R}^{4}$ the bias vectors. The added hidden layer is of dimension $10$, the activation function between the two layers is the parametric rectified linear unit (PReLU) which is defined as:]{style="color:orange;"}
+
+$$
+\text{PReLU}_\zeta(x) = \begin{cases}
+    x \,\, \text{if} \,\, x \geq 0 \\
+    \zeta x \, \,\text{if} \,\, x < 0, 
+\end{cases}
+$$ 
+
+[with $\zeta > 0$ a learnable parameter. The activation function is applied element-wise.]{style="color:orange;"}
 
 
 ```{python python-code}
@@ -809,6 +853,117 @@ if compute_mmd_ref_value :
     print(f'MMD reference value : {np.sqrt(MMD2_rbf(dir1, dir2, gamma=0.5))}')
 
 ```
+
+```{python python-code}
+name_file = 'Multinomial_MMD_NNsensi.pkl'
+file_path = os.path.join(path_plot, name_file)
+plist = [25, 50, 75, 100, 200]
+len_plist = len(plist)
+nb_layers = [1,2]
+nb_samples_mmd = 2*10**4
+if not load_results_MultiMMD_NNsensi :
+    MMDvalues = np.zeros((len_plist,2,2))
+    for n_layer in nb_layers :
+        for index_p in range(len_plist):
+            alpha = 0.5
+            p = plist[index_p]
+            print(f'dimension p = {p}')
+            print(f'number of layers = {n_layer}')
+            # Parameters and classes
+            q = 4      # parameter space dimension
+            n = 10     # multinomial parameter
+            N = 10     # number of data samples
+            J = 1000   # nb samples for MC estimation in MI
+            T = 50     # nb samples MC marginal likelihood
+            Multinom = torch_MultinomialModel(n=n, q=q)  
+            input_size = p  
+            output_size = q
+            n_samples_prior = 10**5
+            low = 0.001           # lower bound (must verifiy q * low < 1)
+            upp = 1 - low*(q-1)  # upper bound (forced value with low and q)
+
+            ##### Prior #####
+            seed_all(0)
+            if n_layer == 1 : 
+                NN = SingleLinear(input_size, output_size, m1=0, s1=0.1, b1=0, act1=nn.Softmax(dim=-1))
+            else :
+                hidden_size = 10
+                NN = DoubleLinear(input_size, hidden_size, output_size, m1=0, s1=0.1, b1=0, m2=0, s2=0.1, b2=0, act1=nn.PReLU(), act2=nn.Softmax(dim=-1))
+            NN = AffineTransformation(NN, m_low=low, M_upp=upp)
+            VA = VA_NeuralNet(neural_net=NN, model=Multinom)
+            #Div = DivMetric_NeuralNet(va=VA, T=T, use_alpha=False, use_log_lik=True)
+            Div = DivMetric_NeuralNet(va=VA, T=T, use_alpha=True, alpha=alpha, use_log_lik=True, use_baseline=False)
+            with torch.no_grad():
+                theta_sample_init = Div.va.implicit_prior_sampler(n_samples_prior).numpy()
+            num_epochs = 10000
+            loss_fct = "LB_MI"
+            optimizer = torch_Adam
+            num_samples_MI = 200
+            freq_MI = 200  
+            save_best_param = True
+            learning_rate = 0.0025
+
+            ### Training loop
+            MI, range_MI, lower_MI, upper_MI = Div.Partial_autograd(J, N, num_epochs, loss_fct, optimizer, 
+                                                                    num_samples_MI, freq_MI, save_best_param, learning_rate,
+                                                                    momentum=True)
+            theta_sample_torch = Div.va.implicit_prior_sampler(n_samples_prior)
+            with torch.no_grad():
+                theta_sample = theta_sample_torch.numpy()
+            jeffreys_sample = Div.model.sample_Jeffreys(n_samples=n_samples_prior)
+
+            MMDvalues[index_p, n_layer-1, 0] = np.sqrt(MMD2_rbf(theta_sample[-nb_samples_mmd:,:], jeffreys_sample[-nb_samples_mmd:,:], gamma=0.5))
+            ##### Posterior ####
+            seed_all(0)
+            # Sample data from 'true' parameter
+            theta_true = torch.tensor(q*[1/q])  
+            N = 10
+            D = Multinom.sample(theta_true, N, 1)
+            X = D[:, 0]
+            # Posterior samples using Jeffreys prior
+            n_samples_post = 5*10**4
+            jeffreys_post = Multinom.sample_post_Jeffreys(X, n_samples_post)
+            T_mcmc = 10**5 + 1
+            sigma2_0 = torch.tensor(1.)
+            eps_0 = torch.randn(p)
+            eps_MH, batch_acc = VA.MH_posterior(eps_0, T_mcmc, sigma2_0, adap=True, Cov=True)
+            theta_MH = NN(eps_MH)
+            with torch.no_grad():
+                theta_MH = theta_MH.numpy()
+                jeffreys_post = jeffreys_post.numpy()
+            theta_post = theta_MH[-n_samples_post:,:]
+
+            MMDvalues[index_p, n_layer-1, 1] = np.sqrt(MMD2_rbf(theta_post[-nb_samples_mmd:,:], jeffreys_post[-nb_samples_mmd:,:], gamma=0.5))
+    with open(file_path, 'wb') as file:
+        pickle.dump(MMDvalues, file)
+else :
+    with open(file_path, 'rb') as file:
+        MMDvalues = pickle.load(file)
+
+```
+
+
+```{python stem-plot}
+#| label: tbl-mmd_multinom2
+#| tbl-cap: "MMD values for different $\\alpha$-divergences at prior and posterior levels. As a reference on the prior level, when computing the criterion between two independent Dirichlet Dir$(\\frac{1}{2},\\frac{1}{2},\\frac{1}{2},\\frac{1}{2})$ distributions (i.e. the Jeffreys prior) on $2 \\cdot 10^4$ samples, we obtain an order of magnitude of $10^{-3}$. For the posterior level, for which the marginal densities do not diverge at zero, this reference has an order of magnitude of $10^{-4}$."
+#| tbl-cap-location: bottom
+
+data = np.column_stack((plist, MMDvalues.reshape(len_plist,4)))
+headers = [r"$p$", "Prior (1 layer)", "Posterior (1 layer)", "Prior (2 layers)", "Posterior (2 layers)"]
+rows = []
+for dim, (a, b, c, d) in zip(plist, MMDvalues.reshape(len_plist,4)):
+    rows.append([f"${dim}$", format_scientific(a), format_scientific(b), format_scientific(c), format_scientific(d)])
+
+md_table = "| " + " | ".join(headers) + " |\n"
+md_table += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+for row in rows:
+    md_table += "| " + " | ".join(row) + " |\n"
+from IPython.display import Markdown, display
+display(Markdown(md_table))
+```
+
+
+[Several observations can be made thanks to @tbl-mmd_multinom2]{style="color:orange;"}. [Firstly, looking at the table column-wise, one can notice that the value of $p$ tends to have little influence on the MMD values, since the order of magnitude always remains the same for each column. We remark also that the MMD values for the simple neural network with one layer are always lower than those for the neural network with the additional hidden layer when reading the table row-wise. This is true for all values of $p$ at both the prior and the posterior level. It is important to note that these experiments were conducted with fixed values of $T$ and $U$, which determine the number of samples used in the Monte Carlo approximation of the objective function's gradient. We note that increasing $T$ and $U$ could improve the quality of VA-RP approximations for more complex networks. However, doing so exponentially increases the computational cost of the method.]{style="color:orange;"}
 
 ## Probit model  {#sec-probit_model}
 
@@ -825,7 +980,7 @@ $$
 \end{cases}
 $$
 
-where $\Phi$ is the cumulative distribution function of the standard Gaussian. The probit function is the inverse of $\Phi$. The likelihood is of the form : 
+where $\Phi$ is the cumulative distribution function of the standard Gaussian. The probit function is the inverse of $\Phi$. The likelihood is of the form: 
 $$
 \begin{cases}
     L_N(\bX \, | \, \theta) = \displaystyle \prod_{i=1}^N p(a_i) \prod_{i=1}^N P_f(a_i)^{Z_i} (1-P_f(a_i))^{1-Z_i} \propto \prod_{i=1}^N  P_f(a_i)^{Z_i} (1-P_f(a_i))^{1-Z_i} \\
@@ -833,7 +988,7 @@ $$
 \end{cases}
 $$
 
-For simplicity, we denote : $\gamma_i = \displaystyle  \frac{\log a_i - \log \theta_1}{\theta_2} = \Phi^{-1}(P_f(a_i)) = \text{probit}(P_f(a_i))$, the gradient of the log-likelihood is the following : 
+For simplicity, we denote: $\gamma_i = \displaystyle  \frac{\log a_i - \log \theta_1}{\theta_2} = \Phi^{-1}(P_f(a_i)) = \text{probit}(P_f(a_i))$, the gradient of the log-likelihood is the following: 
 
 $$
 \begin{cases}
@@ -850,14 +1005,14 @@ J(\theta) \propto 1/\theta_2^3 \quad \text{as} \quad  \theta_2 \longrightarrow +
 \end{cases} 
 $$
 
-If we fix $\theta_2 > 0$, the prior is proper for the variable $\theta_1$ :
+If we fix $\theta_2 > 0$, the prior is proper for the variable $\theta_1$:
 $$
   J(\theta) \propto \frac{|\log \theta_1|}{\theta_1} \exp \left( -\frac{(\log \theta_1 - \mu_a)^2}{2\theta_2 + 2\sigma_a^2} \right)  \quad \text{when} \quad  |\log \theta_1| \longrightarrow +\infty. 
   $$
 
 which resembles a log-normal distribution except for the $|\log \theta_1|$ factor. Since the density of the Jeffreys prior is not explicit and can not be computed directly, the Fisher information matrix is computed in @van2024reference using numerical integration with Simpson's rule on a specific grid and then an interpolation is applied. We use this computation as the reference to evaluate the quality of the output of our algorithm. In the mentioned article, the posterior distribution is also computed with an adaptive Metropolis-Hastings algorithm on the variable $\theta$, we refer to this algorithm as MH($\theta$) since it is different from the one mentioned in @sec-posterio-sampling. More details on MH($\theta$) are given in @gauchy_thesis. We take $\mu_a = 0$, $\sigma^2_a = 1$, $N=500$ and $U=500$ for the computation of the prior.
 
-As for the neural network, we use a one-layer network with an $\exp$ activation for $\theta_1$ and a Softplus activation for $\theta_2$. We have that : 
+As for the neural network, we use a one-layer network with an $\exp$ activation for $\theta_1$ and a Softplus activation for $\theta_2$. We have that: 
 $$
  \theta = \begin{pmatrix}
            \theta_1 \\
@@ -871,7 +1026,7 @@ $$
 
 with $w_1, w_2 \in \mathbb{R}^p$ the weight vectors and $b_1, b_2 \in \mathbb{R}$ the biases, thus we have $\lambda = (w_1, w_2, b_1,b_2)$. 
 Because this architecture remains simple, it is possible to elucidate the resulting marginal distributions of $\theta_1$ and $\theta_2$.
-The first component $\theta_1$ follows a  $\text{Log-}\mathcal{N}(b_1, ||w_1||_2^2)$ distribution and $\theta_2$ has an explicit density function : 
+The first component $\theta_1$ follows a  $\text{Log-}\mathcal{N}(b_1, ||w_1||_2^2)$ distribution and $\theta_2$ has an explicit density function: 
 \begin{equation*} 
     p(\theta_2) = \frac{1}{\sqrt{2\pi||w_2||_2^2}(1-e^{-\theta_2})} \exp \left(-\frac{1}{2||w_2||_2^2}\left(\log(e^{\theta_2}-1)-b_2 \right)^2 \right).
 \end{equation*} 
@@ -980,7 +1135,7 @@ else :
 
 ```{python stem-plot}
 #| label: fig-probit_mi
-#| fig-cap:  "Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from 100 samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the 95\\% confidence interval. The learning rate used in the optimization is $0.001$."
+#| fig-cap:  "Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from $100$ samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the $95\\%$ confidence interval. The learning rate used in the optimization is $0.001$."
 
 plt.figure(figsize=(4, 3))
 plt.plot(range_MI, MI, '-', color=rougeCEA)
@@ -1119,7 +1274,7 @@ else :
 
 ```{python stem-plot}
 #| label: fig-probit_constr_mi
-#| fig-cap: "Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from 100 samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the 95\\% confidence interval. The learning rate used in the optimization is $0.0005$."
+#| fig-cap: "Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from $100$ samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the $95\\%$ confidence interval. The learning rate used in the optimization is $0.0005$."
 
 plt.figure(figsize=(5, 3))
 plt.plot(range_MI, MI, '-', color=rougeCEA)
@@ -1154,7 +1309,7 @@ plt.show()
 ```
 
 
-For the posterior, we take as dataset $50$ samples from the probit model with $\theta_{true}$ close to (3.37,0.43). For computational reasons, the Metropolis-Hastings algorithm is applied for only $5\cdot10^4$ iterations. An important remark is that if the size of the dataset is rather small, the probability that the data is degenerate is not negligible. By degenerate data, we refer to situations when the data points are partitioned into two disjoint subsets when classified according to $a$ values, the posterior becomes improper because the likelihood is constant (@van2024reference). In such cases, the convergence of the Markov chains is less apparent, the plots for this section are obtained with non-degenerate datasets.   
+For the posterior, we take as dataset $50$ samples from the probit model with $\theta_{true}$ close to $(3.37,0.43)$. For computational reasons, the Metropolis-Hastings algorithm is applied for only $5\cdot10^4$ iterations. An important remark is that if the size of the dataset is rather small, the probability that the data is degenerate is not negligible. By degenerate data, we refer to situations when the data points are partitioned into two disjoint subsets when classified according to $a$ values, the posterior becomes improper because the likelihood is constant (@van2024reference). In such cases, the convergence of the Markov chains is less apparent, the plots for this section are obtained with non-degenerate datasets.   
 
 
 ```{python stem-plot}
@@ -1226,7 +1381,7 @@ L_N(\bX\,|\,\theta) \aseq{\theta_2\rightarrow0} \theta_2^{\|\chi\|_2^2}\exp\left
 $$
 where $\chi\in\{0,1\}^N$ is a non-null vector that depends on $\bX$.
 
-When $\theta_2\rightarrow\infty$, however, the likelihood does not reduce the influence of the prior has it remains asymptotically constant: $L_N(\bX \,|\,\theta) \conv{\theta_2\rightarrow\infty}2^{-N}$.
+When $\theta_2\rightarrow\infty$, however, the likelihood does not reduce the influence of the prior as it remains asymptotically constant: $L_N(\bX \,|\,\theta) \conv{\theta_2\rightarrow\infty}2^{-N}$.
 
 
 ```{python stem-plot}
@@ -1292,13 +1447,15 @@ plt.show()
 
 The result on the constrained case (@fig-probit_post_constr_scatterhist) is very similar to the unconstrained one. 
 
-Altogether, one can observe that the variational inference approach yields close results to the numerical integration approach @van2024reference, with or without constraints, even tough the matching of the decay rates w.r.t. $\theta_2$ remains limited given the simple network that we have used in this case.
+Altogether, one can observe that the variational inference approach yields close results to the numerical integration approach (@van2024reference), with or without constraints, even though the matching of the decay rates w.r.t. $\theta_2$ remains limited given the simple network that we have used in this case.
 
 To ascertain the relevancy of our posterior approximation, we compute the posterior mean euclidean norm difference $\mathbb{E}_{\theta}\left[ ||\theta - \theta_{true}||  \right]$ as a function of the size of the dataset. In each computation, the neural network remains the same but the dataset changes by adding new entries. 
 
 Furthermore, in order to assess the stability of the stochastic optimization with respect to the random number generator (RNG) seed, we also compute the empirical cumulative distribution functions (ECDFs) for each posterior distribution. For every seed, the parameters of the neural network are expected to be different, we keep the same dataset for the MCMC sampling however.
 
-Both types of computations are done in the unconstrained case as well as the constrained one. The different plots and details can be found in @sec-appendix.
+[Finally, we compute the ECDFs for different values of the dimension of the latent space $p$ in order to quantify the sensitivity of the output distributions with respect to this hyperparameter.]{style="color:orange;"}
+
+These computations are done in the unconstrained case as well as the constrained one. The different plots and details can be found in @sec-appendix.
 
 
 # Conclusion
@@ -1313,7 +1470,7 @@ These test cases range from purely toy models to more real-world problems, namel
 
 Our development is supported by an open source and flexible implementation, which can be adapted to a wide range of statistical models.
 
-Looking forward, the approximation of the tails of the reference priors could be improved. That is a complex problem in the field of variational approximation, as well as the stability of the algorithm when using deeper networks[, or different architectures]{style="color:green;"}. An extension of this work to the approximation of Maximal Data Information (MDI) priors is also appealing, thanks to the fact MDI are proper under certain assumptions precised in @Bousquet2008.  
+Looking forward, the approximation of the tails of the reference priors should be improved, but this is a complex and general problem in the field of variational approximation. Furthermore, the stability of the algorithm which seems to depend on the statistical model and the architecture of the neural network is an other issue to be addressed. An extension of this work to the approximation of Maximal Data Information (MDI) priors is also appealing, thanks to the fact that MDI are proper under certain assumptions precised in @Bousquet2008.  
 
 
 # Acknowledgement {.unnumbered}
@@ -1326,36 +1483,36 @@ This research was supported by the CEA (French Alternative Energies and Atomic E
 ## Gradient computation of the generalized mutual information  {#sec-grad_comp}
 
 
-We recall that $F(x) = f(x)-xf'(x)$ and $p_{\lambda}$ is a shortcut notation for $p_{\pi_{\lambda}, N}$ being the marginal distribution under $\pi_{\lambda}$. The generalized mutual information writes : 
+We recall that $F(x) = f(x)-xf'(x)$ and $p_{\lambda}$ is a shortcut notation for $p_{\pi_{\lambda}, N}$ being the marginal distribution under $\pi_{\lambda}$. The generalized mutual information writes: 
 $$
 \begin{aligned}
     I_{\rD_f}(\pi_{\lambda}; L_N) & = \int_{\Theta}{\rD_f}(p_{\lambda}||L_N(\cdot \, | \, \theta)) \pi_{\lambda}(\theta)d\theta \\
     & = \int_{\Theta} \int_{\mathcal{X}^N} \pi_{\lambda}(\theta)L_N(\bX \, | \, \theta)f\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \, | \, \theta)}\right) d\bX d\theta.
 \end{aligned}
 $$
-For each $l$, taking the derivative with respect to $\lambda_l$ yields : 
+For each $l$, taking the derivative with respect to $\lambda_l$ yields: 
 $$
 \begin{aligned}
 \frac{\partial I_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) & = \int_{\Theta} \int_{\mathcal{X}^N} \frac{\partial \pi_{\lambda}}{\partial \lambda_l}(\theta)L_N(\bX \, | \, \theta)f\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \, | \, \theta)}\right) d\bX d\theta \\
 & + \int_{\Theta} \int_{\mathcal{X}^N} \pi_{\lambda}(\theta)L_N(\bX \, | \, \theta)\frac{\partial p_{\lambda}}{\partial \lambda_l}\frac{1}{L_N(\bX \, | \, \theta)}(\bX)f'\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \, | \, \theta)}\right) d\bX d\theta, 
 \end{aligned}
 $$
-or in terms of expectations : 
+or in terms of expectations: 
 $$
 \frac{\partial I_{\rD_f}}{\partial \lambda_l}(\pi_{\lambda}; L_N) = \frac{\partial}{\partial \lambda_l} \mathbb{E}_{\theta \sim \pi_{\lambda}} \left[ \tilde{I}(\theta)  \right] 
 + \mathbb{E}_{\theta \sim \pi_{\lambda}}\left[ \mathbb{E}_{\bX \sim L_N(\cdot |\theta)}\left[ \frac{1}{L_N(\bX \,|\,\theta)} \frac{\partial p_{\lambda}}{\partial \lambda_l}(\bX)f'\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)}\right)\right]  \right],
 $$
-where : 
+where: 
 $$
  \tilde{I}(\theta) = \int_{\mathcal{X}^N} L_N(\bX \, | \, \theta)f\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \, | \, \theta)}\right) d\bX.
 $$
 
-We note that the derivative with respect to $\lambda_l$ does not apply to $\tilde{I}$ in the previous equation. Using the chain rule yields :
+We note that the derivative with respect to $\lambda_l$ does not apply to $\tilde{I}$ in the previous equation. Using the chain rule yields:
 $$
  \frac{\partial}{\partial \lambda_l} \mathbb{E}_{\theta \sim \pi_{\lambda}} \left[ \tilde{I}(\theta)  \right] = \frac{\partial}{\partial \lambda_l} \mathbb{E}_{\varepsilon} \left[ \tilde{I}(g(\lambda, \varepsilon)) \right] = \mathbb{E}_{\varepsilon}\left[\sum_{j=1}^q\frac{\partial \tilde{I}}{\partial \theta_j}(g(\lambda,\varepsilon))\frac{\partial g_j}{\partial \lambda_l}(\lambda,\varepsilon)\right]. 
 $$
 
-We have the following for every $j \in \{1,...,q\}$ : 
+We have the following for every $j \in \{1,...,q\}$: 
 $$
 \begin{aligned}
 \frac{\partial \tilde{I}}{\partial \theta_j}(\theta) & = \int_{\mathcal{X}^N}   \frac{- p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)}   \frac{\partial L_N}{\partial \theta_j}(\bX \,|\,\theta)f'\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)}\right) + f\left( \frac{p_{\lambda}(\bX)}{L_N(\bX \,|\,\theta)}\right) \frac{\partial L_N}{\partial \theta_j}(\bX \,|\,\theta) d\bX  \\
@@ -1376,7 +1533,7 @@ $$
 
 where 
 $$
-    \mathcal{G}_l=\mathbb{E}_{\theta\sim\pi_\lambda}\mathbb{E}_{\mathbf{X}\sim L_N(\cdot|\theta)}\left[\frac{1}{L_N(\mathbf{X}|\theta)}\frac{\partial p_\lambda}{\partial \lambda_l}(\mathbf{X})f'\left(\frac{p_\lambda(\mathbf{X})}{L_N(\mathbf{X}|\theta))} \right) \right].
+    \mathcal{G}_l=\mathbb{E}_{\theta\sim\pi_\lambda}\mathbb{E}_{\mathbf{X}\sim L_N(\cdot|\theta)}\left[\frac{1}{L_N(\mathbf{X}|\theta)}\frac{\partial p_\lambda}{\partial \lambda_l}(\mathbf{X})f'\left(\frac{p_\lambda(\mathbf{X})}{L_N(\mathbf{X}|\theta)} \right) \right].
 $$
 
 We remark that
@@ -1411,11 +1568,9 @@ $$
 which is compatible with the form of @eq-compatible_objective_function.
 
 
-
-
 ## Gaussian distribution with variance parameter
 
-We consider a normal distribution where $\theta$ is the variance parameter :  $X_i \sim \mathcal{N}(\mu,\theta)$ with $\mu \in \mathbb{R}$, $\bX \in \mathcal{X}^N = \mathbb{R}^N$ and $\theta \in \mathbb{R}^*_{+}$. We take $\mu=0$. The likelihood and score functions are :
+We consider a normal distribution where $\theta$ is the variance parameter:  $X_i \sim \mathcal{N}(\mu,\theta)$ with $\mu \in \mathbb{R}$, $\bX \in \mathcal{X}^N = \mathbb{R}^N$ and $\theta \in \mathbb{R}^*_{+}$. We take $\mu=0$. The likelihood and score functions are:
 $$  
 L_N(\bX\,|\,\theta) = \prod_{i=1}^N \frac{1}{\sqrt{2\pi \theta}} \exp \left( -\frac{1}{2\theta}(X_i - \mu)^2 \right) 
 $$
@@ -1424,7 +1579,7 @@ $$
  \frac{\partial \log L_N}{\partial \theta}(\bX\,|\,\theta)  = - \frac{N}{2\theta} + \frac{1}{2\theta^2} \sum_{i=1}^N (X_i - \mu)^2.
 $$
 
-The MLE is available : $\hat{\theta}_{MLE} = \frac{1}{N} \sum_{i=1}^N X_i$. However, the Jeffreys prior is an improper distribution in this case : $J(\theta) \propto 1/\theta$. Nevertheless, the Jeffreys posterior is a proper inverse-gamma distribution:
+The MLE is available: $\hat{\theta}_{MLE} = \frac{1}{N} \sum_{i=1}^N X_i$. However, the Jeffreys prior is an improper distribution in this case: $J(\theta) \propto 1/\theta$. Nevertheless, the Jeffreys posterior is a proper inverse-gamma distribution:
 $$
 J_{post}(\theta \, | \ \bX) = \Gamma^{-1} \left(\theta; \frac{N}{2}, \frac{1}{2} \sum_{i=1}^N(X_i - \mu)^2  \right).
 $$
@@ -1460,7 +1615,6 @@ Div = DivMetric_NeuralNet(va=VA, T=T, use_alpha=True, alpha=0.5, use_log_lik=Tru
 with torch.no_grad():
     theta_sample_init = Div.va.implicit_prior_sampler(n_samples_prior).numpy()
 
-
 num_epochs = 7000
 loss_fct = "LB_MI"
 optimizer = torch_Adam
@@ -1474,14 +1628,11 @@ if not load_results_Normal_nocstr :
     MI, range_MI, lower_MI, upper_MI = Div.Partial_autograd(J, N, num_epochs, loss_fct, optimizer, 
                                                             num_samples_MI, freq_MI, save_best_param, 
                                                             learning_rate, momentum=True)
-
-
     theta_sample = Div.va.implicit_prior_sampler(n_samples_prior)
     with torch.no_grad():
         theta_sample = theta_sample.numpy()
 
     seed_all(0)
-
     # Sample data from 'true' parameter
     theta_true = torch.tensor(1.)  
     N = 10
@@ -1503,12 +1654,13 @@ if not load_results_Normal_nocstr :
         jeffreys_post = jeffreys_post.numpy()
     theta_post = theta_MH[-n_samples_post:]
     theta_post = np.reshape(theta_post, (n_samples_post,q))
+    interv_post = np.linspace(0.01, 10, 10000)
+    target_post_values = scipy.stats.invgamma.pdf(interv_post, a=0.5*N, loc=0, scale = (0.5*torch.sum((X-mu)**2)).numpy())
 
     # Saves all relevant quantities
-    
     Mutual_Info = {'values' : MI, 'range' : range_MI, 'lower' : lower_MI, 'upper' : upper_MI}
     Prior = {'samples' : theta_sample, 'jeffreys' : jeffreys_sample, 'params' : all_params}
-    Posterior = {'samples' : theta_post, 'jeffreys' : jeffreys_post, 'Markov' : theta_MH}
+    Posterior = {'samples' : theta_post, 'jeffreys' : jeffreys_post, 'Markov' : theta_MH, 'target' : target_post_values}
     Normal_results_nocstr = {'MI' : Mutual_Info, 'prior' : Prior, 'post' : Posterior}
     with open(file_path, 'wb') as file:
         pickle.dump(Normal_results_nocstr, file)
@@ -1521,13 +1673,13 @@ else :
         Posterior = res['post']
         MI, range_MI, lower_MI, upper_MI = MI_dic['values'], MI_dic['range'], MI_dic['lower'], MI_dic['upper']
         theta_sample, jeffreys_sample, all_params = Prior['samples'], Prior['jeffreys'], Prior['params']
-        theta_post, jeffreys_post, theta_MH = Posterior['samples'], Posterior['jeffreys'], Posterior['Markov']
+        theta_post, jeffreys_post, theta_MH, target_post_values = Posterior['samples'], Posterior['jeffreys'], Posterior['Markov'], Posterior['target']
 ```
 
 
 ```{python stem-plot}
 #| label: fig-normal_prior
-#| fig-cap: "Left : Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from 200 samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the 95\\% confidence interval. Right : Histograms of the initial prior (at epoch 0) and the fitted prior (after training), each one is obtained from $10^5$ samples. The learning rate used in the optimization is $0.025$."
+#| fig-cap: "Left: Monte Carlo estimation of the generalized mutual information with $\\alpha=0.5$ (from $200$ samples) for $\\pi_{\\lambda_e}$ where $\\lambda_e$ is the parameter of the neural network at epoch $e$. The red curve is the mean value and the gray zone is the $95\\%$ confidence interval. Right: Histograms of the initial prior (at epoch 0) and the fitted prior (after training), each one is obtained from $10^5$ samples. The learning rate used in the optimization is $0.025$."
 
 
 fig, axs = plt.subplots(1, 2, figsize=(12, 3))
@@ -1551,21 +1703,23 @@ plt.show()
 
 We retrieve close results to those of @gauchy_var_rp, even though we used the $\alpha$-divergence instead of the classic KL-divergence (@fig-normal_prior). The evolution of the mutual information seems to be more stable during training.  We can not however directly compare our result to the target Jeffrey prior since the latter is improper.
 
-For the posterior distribution, we sample 10 times from the normal distribution using $\theta_{true} = 1$.
+For the posterior distribution, we sample $10$ times from the normal distribution using $\theta_{true} = 1$.
 
 ```{python stem-plot}
 #| label: fig-normal_post
-#| fig-cap: "Left : Markov chain during the Metropolis-Hastings iterations. Right : Histograms of the fitted posterior and the Jeffreys posterior, each one is obtained from $5\\cdot10^4$ samples."
+#| fig-cap: "Left: Markov chain during the Metropolis-Hastings iterations. Right: Histogram of the fitted posterior obtained from $5 \\cdot 10^4$ samples and the density function of the Jeffreys posterior."
 
+interv_post = np.linspace(0.01, 10, 10000)
 fig, axs = plt.subplots(1, 2, figsize=(12, 3))
 axs[0].plot(theta_MH)
 axs[0].set_xlabel('Iterations')
 axs[0].set_ylabel(r'$\theta$')
 axs[0].grid()
 axs[1].hist(theta_post, density=True, bins="rice", label=r"Fitted posterior", alpha=0.4)
-axs[1].hist(jeffreys_post, density=True, bins="rice", label=r"Jeffreys", alpha=0.4, color=vertCEA)
+#axs[1].hist(jeffreys_post, density=True, bins="rice", label=r"Jeffreys", alpha=0.4, color=vertCEA)
+axs[1].plot(interv_post, target_post_values, label=r"Jeffreys posterior", color=vertCEA)
 axs[1].set_xlabel(r"$\theta$")
-axs[1].legend(fontsize=12)
+axs[1].legend(fontsize=16)
 axs[1].grid()
 plt.show()
 ```
@@ -1573,15 +1727,15 @@ plt.show()
 
 As @fig-normal_post shows, we obtain a parametric posterior distribution which closely resembles the target distribution, even though the theoretical prior is improper.
 
-In order to evaluate the performance of the algorithm for the prior, we have to add a constraint. The simplest kind of constraints are moment constraints with : $a(\theta) = \theta^{\beta}$, however, we can not use such a constraint here since the integrals for $\mathcal{K}$ and $c$ from @sec-rp_theory would diverge either at $0$ or at $+\infty$.
+In order to evaluate the performance of the algorithm for the prior, we have to add a constraint. The simplest kind of constraints are moment constraints with: $a(\theta) = \theta^{\beta}$, however, we can not use such a constraint here since the integrals for $\mathcal{K}$ and $c$ from @sec-rp_theory would diverge either at $0$ or at $+\infty$.
 
-If we define : $a(\theta) = \displaystyle \frac{1}{\theta^{\beta}+\theta^{\tau}}$ with $\beta < 0 < \tau$,
-then the integrals for $\mathcal{K}$ and $c$ are finite, because : 
+If we define: $a(\theta) = \displaystyle \frac{1}{\theta^{\beta}+\theta^{\tau}}$ with $\beta < 0 < \tau$,
+then the integrals for $\mathcal{K}$ and $c$ are finite, because: 
 $$
  \forall \, \delta \geq 1, \quad \int_0^{+\infty} \frac{1}{\theta}\cdot \left(\frac{1}{\theta^{\beta}+\theta^{\tau}} \right)^{\delta} d\theta \leq \frac{1}{\delta}\left( \frac{1}{\tau} - \frac{1}{\beta}\right) . 
 $$
 
-This function of constraint $a$ is preferable because it yields different asymptotic rates at $0$ and $+\infty$ :
+This function of constraint $a$ is preferable because it yields different asymptotic rates at $0$ and $+\infty$:
 $$
    \begin{cases} \displaystyle
 a(\theta) \sim \theta^{-\beta} \quad \text{as} \quad  \theta \longrightarrow 0 \\
@@ -1589,7 +1743,7 @@ a(\theta) \sim \theta^{-\tau} \quad \text{as} \quad  \theta \longrightarrow +\in
 \end{cases} 
 $$
 
-In order to apply the algorithm, we are interested in finding : 
+In order to apply the algorithm, we are interested in finding: 
 $$
  \mathcal{K} = \int_0^{+\infty} \frac{1}{\theta}\cdot a(\theta)^{1/\alpha} d\theta \quad \text{and} \quad  c = \int_0^{+\infty} \frac{1}{\theta}\cdot a(\theta)^{1+(1/\alpha)} d\theta. 
  $$
@@ -1760,7 +1914,7 @@ As mentioned in @sec-probit_model regarding the probit model, we present several
 
 ```{python stem-plot}
 #| label: fig-quad_error_post
-#| fig-cap: "Mean norm difference as a function of the size $N$ of the dataset for the unconstrained fitted posterior and the Jeffreys posterior. For each value of $N$, 10 different datasets are considered from which we obtain 95\\% confidence intervals."
+#| fig-cap: "Mean norm difference as a function of the size $N$ of the dataset for the unconstrained fitted posterior and the Jeffreys posterior. For each value of $N$, $10$ different datasets are considered from which we obtain $95\\%$ confidence intervals."
 
 
 num_M = 10
@@ -1819,7 +1973,7 @@ plt.show()
 
 ```{python stem-plot}
 #| label: fig-quad_error_post_constr
-#| fig-cap: "Mean norm difference as a function of the size $N$ of the dataset for the constrained fitted posterior and the Jeffreys posterior. For each value of $N$, 10 different datasets are considered from which we obtain 95\\% confidence intervals."
+#| fig-cap: "Mean norm difference as a function of the size $N$ of the dataset for the constrained fitted posterior and the Jeffreys posterior. For each value of $N$, $10$ different datasets are considered from which we obtain $95\\%$ confidence intervals."
 
 num_M = 10
 N_max = 200
@@ -1888,11 +2042,8 @@ n_exp = 100   # Number of experiments
 model = os.path.join(varp_probit_path, 'probit_samples/probit')
 q = 2
 first_file = model + '_seed_1.pkl' 
- 
 n_samples_prior = 10**6
 n_samples_post = 5000
-
-# Concatenate results from all experiments
 
 theta_prior = np.zeros((n_exp,n_samples_prior,q))
 jeffreys_prior = np.zeros((n_exp,n_samples_prior,q))
@@ -1922,7 +2073,6 @@ for k in range(n_exp):
     jeff_post_alpha[k,:] = compute_ecdf(jeffreys_post[k,:,0], x_values_alpha)
     jeff_post_beta[k,:] = compute_ecdf(jeffreys_post[k,:,1], x_values_beta)
 
-
 lower_bound_alpha = np.quantile(cdf_post_alpha, 0., axis=0)
 upper_bound_alpha = np.quantile(cdf_post_alpha, 1.0, axis=0)
 median_cdf_alpha = np.quantile(cdf_post_alpha, 0.5, axis=0)
@@ -1932,6 +2082,9 @@ lower_bound_beta = np.quantile(cdf_post_beta, 0., axis=0)
 upper_bound_beta = np.quantile(cdf_post_beta, 1., axis=0)
 median_cdf_beta = np.quantile(cdf_post_beta, 0.5, axis=0)
 median_jeff_beta = np.quantile(jeff_post_beta, 0.5, axis=0)
+
+jeff_alpha_nocstr = median_jeff_alpha
+jeff_beta_nocstr = median_jeff_beta
 
 # Create subplots for alpha and beta
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3))
@@ -1970,8 +2123,6 @@ first_file = model + '_seed1.pkl'
 n_samples_prior = 10**6
 n_samples_post = 5000
 
-# Concatenate results from all experiments
-
 theta_prior = np.zeros((n_exp,n_samples_prior,q))
 jeffreys_prior = np.zeros((n_exp,n_samples_prior,q))
 theta_post = np.zeros((n_exp,n_samples_post,q))
@@ -2001,7 +2152,6 @@ for k in range(n_exp):
     jeff_post_alpha[k,:] = compute_ecdf(jeffreys_post[k,:,0], x_values_alpha)
     jeff_post_beta[k,:] = compute_ecdf(jeffreys_post[k,:,1], x_values_beta)
 
-
 lower_bound_alpha = np.quantile(cdf_post_alpha, 0., axis=0)
 upper_bound_alpha = np.quantile(cdf_post_alpha, 1.0, axis=0)
 median_cdf_alpha = np.quantile(cdf_post_alpha, 0.5, axis=0)
@@ -2011,6 +2161,9 @@ lower_bound_beta = np.quantile(cdf_post_beta, 0., axis=0)
 upper_bound_beta = np.quantile(cdf_post_beta, 1.0, axis=0)
 median_cdf_beta = np.quantile(cdf_post_beta, 0.5, axis=0)
 median_jeff_beta = np.quantile(jeff_post_beta, 0.5, axis=0)
+
+jeff_alpha_cstr = median_jeff_alpha
+jeff_beta_cstr = median_jeff_beta
 
 # Create subplots for alpha and beta
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3))
@@ -2038,9 +2191,282 @@ plt.show()
 ```
 
 
-@fig-probit_ecdf and @fig-probit_ecdf_constr compare the empirical distribution functions of the fitted posterior and the Jeffreys posterior. In the unconstrained case, one can observe that the ECDFs are very close for $\theta_1$, whereas the variability is slightly higher for $\theta_2$ although still reasonable. When imposing a constraint on $\theta_2$, one remarks that the variability of the result is higher. The Jeffreys ECDF is contained in the band when $\theta_2$ is close to zero, but not when $\theta_2$ increases ($\theta_2 > 0.5$). This is coherent with the previous scatter histograms where the Jeffreys posterior on $\theta_2$ tends to have a heavier tail than the variational approximation.
+@fig-probit_ecdf and @fig-probit_ecdf_constr compare the empirical cumulative distribution functions of the fitted posterior and the Jeffreys posterior. In the unconstrained case, one can observe that the ECDFs are very close for $\theta_1$, whereas the variability is slightly higher for $\theta_2$ although still reasonable. When imposing a constraint on $\theta_2$, one remarks that the variability of the result is higher. The Jeffreys ECDF is contained in the band when $\theta_2$ is close to zero, but not when $\theta_2$ increases ($\theta_2 > 0.5$). This is coherent with the previous scatter histograms where the Jeffreys posterior on $\theta_2$ tends to have a heavier tail than the variational approximation.
 
 Altogether, despite the stochastic nature of the developed algorithm, we consider that the result tends to be reasonably robust to the RNG seed for the optimization part, and robust to the dataset used for the posterior distribution for the MCMC part.
+
+
+```{python python-code}
+theta_post_nocstr_latent = []
+theta_post_cstr_latent = []
+jeff_post_nocstr_latent = []
+jeff_post_cstr_latent = []
+p_vals = [25, 50, 75, 100, 200]
+num_p = len(p_vals)
+
+for p in  p_vals :
+    
+    # Parameters and classes  
+    q = 2      
+    N = 500     
+    J = 500   
+    T = 50     
+    input_size = p  
+    output_size = q
+    low = 0.0001        
+    upp = 1 + low
+    mu_a, sigma2_a = 0, 1
+    #mu_a, sigma2_a = 8.7 * 10**-3, 1.03
+    Probit = torch_ProbitModel(use_log_normal=True, mu_a=mu_a, sigma2_a=sigma2_a, set_beta=None, alt_scaling=True)
+    n_samples_prior = 10**6
+    alpha = 0.5
+    name_file = f'Probit_results_unconstr_p={p}.pkl'
+    file_path = os.path.join(path_plot, name_file)
+
+    seed_all(0)
+    NN = SingleLinear(input_size, output_size, m1=0, s1=0.1, b1=0, act1=nn.Identity())
+    NN = DifferentActivations(NN, [torch.exp, nn.Softplus()])
+    NN = AffineTransformation(NN, low, upp)
+    VA = VA_NeuralNet(neural_net=NN, model=Probit)
+    #print(f'Number of parameters : {VA.nb_param}')
+    Div = DivMetric_NeuralNet(va=VA, T=T, use_alpha=True, alpha=alpha, use_log_lik=True)
+    with torch.no_grad():
+        theta_sample_init = Div.va.implicit_prior_sampler(n_samples_prior).numpy()
+
+    num_epochs = 10000
+    loss_fct = "LB_MI"
+    optimizer = torch_Adam
+    num_samples_MI = 100
+    freq_MI = 500
+    save_best_param = True
+    learning_rate = 0.001
+
+    if not load_results_Probit_nocstr_latentdim : 
+        MI, range_MI, lower_MI, upper_MI = Div.Partial_autograd(J, N, num_epochs, loss_fct, optimizer, num_samples_MI, 
+                                                                freq_MI, save_best_param, learning_rate, momentum=True)
+        all_params = torch.cat([param.view(-1) for param in NN.parameters()])
+        seed_all(0)
+        theta_sample = Div.va.implicit_prior_sampler(n_samples_prior)
+        with torch.no_grad():
+            theta_sample_prior = theta_sample.numpy()
+        with open(tirages_path, 'rb') as file:
+            data = pickle.load(file)
+        data_A, data_Z = data[0], data[1]
+        theta_true = np.array([3.37610525, 0.43304097])
+        N = 50  # non-degenerate
+        i = 2
+        seed_all(0)
+        Xstack = np.stack((data_Z[:N, i],data_A[:N, i]),axis=1)
+        X = torch.tensor(Xstack)
+        D = X.unsqueeze(1)
+        Probit.data = D
+        n_samples_post = 5000
+        T_mcmc = 5*10**4 + 1 
+        sigma2_0 = torch.tensor(1.)
+        eps_0 = torch.randn(p)
+        #eps_0 = 10 * torch.ones(p)
+        eps_MH, batch_acc = VA.MH_posterior(eps_0, T_mcmc, sigma2_0, target_accept=0.4, adap=True, Cov=True, disable_tqdm=False)
+        theta_MH = NN(eps_MH)
+        with torch.no_grad():
+            theta_MH = theta_MH.detach().numpy()
+        theta_post_nocstr = theta_MH[-n_samples_post:,-n_samples_post:]
+        # Saves all relevant quantities
+        Mutual_Info = {'values' : MI, 'range' : range_MI, 'lower' : lower_MI, 'upper' : upper_MI}
+        Prior = {'samples' : theta_sample_prior, 'jeffreys' : None, 'params' : all_params}
+        Posterior = {'samples' : theta_post_nocstr, 'jeffreys' : None}
+        Probit_results_nocstr = {'MI' : Mutual_Info, 'prior' : Prior, 'post' : Posterior}
+        with open(file_path, 'wb') as file:
+            pickle.dump(Probit_results_nocstr, file)
+        
+    else :
+        with open(file_path, 'rb') as file:
+            res = pickle.load(file)
+            MI_dic = res['MI']
+            Prior = res['prior'] 
+            Posterior = res['post']
+            MI, range_MI, lower_MI, upper_MI = MI_dic['values'], MI_dic['range'], MI_dic['lower'], MI_dic['upper']
+            theta_sample_prior, jeffreys_sample, all_params = Prior['samples'], Prior['jeffreys'], Prior['params']
+            theta_post_nocstr, jeffreys_post = Posterior['samples'], Posterior['jeffreys']
+
+    theta_post_nocstr_latent.append(theta_post_nocstr)
+
+    kappa = 1/8
+    K_val = np.mean((theta_sample_prior[:,1]**kappa)**(1/alpha))
+    c_val = np.mean((theta_sample_prior[:,1]**kappa)**(1+1/alpha))
+    constr_val = c_val / K_val
+    alpha_constr = np.mean((theta_sample_prior[:,0]**-kappa + 1)**-1)
+    #print(f'Constraint value estimation : {constr_val}')
+
+    # Parameters and classes
+    q = 2      # parameter space dimension
+    N = 500    # number of data samples
+    J = 500    # nb samples for MC estimation in MI
+    T = 50     # nb samples MC marginal likelihood
+    alpha = 0.5
+    input_size = p  
+    output_size = q
+    low = 0.0001          # lower bound 
+    upp = 1 + low
+    n_samples_prior = 10**6
+
+    mu_a, sigma2_a = 0, 1
+    #mu_a, sigma2_a = 8.7 * 10**-3, 1.03
+    Probit = torch_ProbitModel(use_log_normal=True, mu_a=mu_a, sigma2_a=sigma2_a, set_beta=None, alt_scaling=True)
+
+    # Constraints
+    beta = torch.tensor([kappa])
+    b = torch.tensor([[alpha_constr,constr_val]]) 
+    T_cstr = 100000
+    eta_augm = torch.tensor([[0.,1.]])
+    eta = torch.tensor([[0.,1.]])
+    name_file = f'Probit_results_constr_p={p}.pkl'
+    file_path = os.path.join(path_plot, name_file)
+
+    seed_all(0)
+    NN = SingleLinear(input_size, output_size, m1=0, s1=0.1, b1=0, act1=nn.Identity())
+    NN = DifferentActivations(NN, [torch.exp, nn.Softplus()])
+    NN = AffineTransformation(NN, low, upp)
+    VA = VA_NeuralNet(neural_net=NN, model=Probit)
+    #print(f'Number of parameters : {VA.nb_param}')
+    Div = DivMetric_NeuralNet(va=VA, T=T, use_alpha=True, alpha=0.5, use_log_lik=True)
+    Constr = Constraints_NeuralNet(div=Div, betas=beta, b=b, T_cstr=T_cstr, 
+                                objective='LB_MI', lag_method='augmented', eta_augm=eta_augm, rule='SGD')
+    with torch.no_grad():
+        theta_sample_init = Div.va.implicit_prior_sampler(n_samples_prior).numpy()
+    num_epochs = 10000
+    optimizer = torch_Adam
+    num_samples_MI = 100
+    freq_MI = 500
+    save_best_param = False
+    learning_rate = 0.0005
+    freq_augm = 100
+
+    if not load_results_Probit_cstr_latentdim :
+        ### Training loop
+        MI, constr_values, range_MI, lower_MI, upper_MI = Constr.Partial_autograd(J, N, eta, num_epochs, optimizer, num_samples_MI, 
+                                                                freq_MI, save_best_param, learning_rate, momentum=True,
+                                                                freq_augm=freq_augm, max_violation=0.005, update_eta_augm=2.)
+        constr_values = torch.stack(constr_values).numpy()
+        all_params = torch.cat([param.view(-1) for param in NN.parameters()])
+        seed_all(0)
+        with torch.no_grad():
+            theta_sample = Constr.va.implicit_prior_sampler(n_samples_prior).numpy()
+        print(f'Moment of order {beta.item()}, estimation : {np.mean(theta_sample**beta.item(),axis=0)}, wanted value : {b}')
+        seed_all(0)
+        with open(tirages_path, 'rb') as file:
+            data = pickle.load(file)
+        data_A, data_Z = data[0], data[1]
+        N = 50  # non-degenerate
+        i = 2
+        Xstack = np.stack((data_Z[:N, i],data_A[:N, i]),axis=1)
+        X = torch.tensor(Xstack)
+        D = X.unsqueeze(1)
+        Probit.data = D
+        n_samples_post = 5000
+        T_mcmc = 5*10**4 + 1 
+        sigma2_0 = torch.tensor(1.)
+        eps_0 = torch.randn(p)
+        eps_MH, batch_acc = VA.MH_posterior(eps_0, T_mcmc, sigma2_0, target_accept=0.4, adap=True, Cov=True, disable_tqdm=False)
+        theta_MH = NN(eps_MH)
+        with torch.no_grad():
+            theta_MH = theta_MH.detach().numpy()
+        theta_post_cstr = theta_MH[-n_samples_post:,-n_samples_post:]
+        # Saves all relevant quantities
+        Mutual_Info = {'values' : MI, 'range' : range_MI, 'lower' : lower_MI, 'upper' : upper_MI, 'constr' : constr_values}
+        Prior = {'samples' : theta_sample_prior, 'jeffreys' : None, 'params' : all_params}
+        Posterior = {'samples' : theta_post_cstr, 'jeffreys' : None}
+        Probit_results_cstr = {'MI' : Mutual_Info, 'prior' : Prior, 'post' : Posterior}
+        with open(file_path, 'wb') as file:
+            pickle.dump(Probit_results_cstr, file)
+    else :
+        with open(file_path, 'rb') as file:
+            res = pickle.load(file)
+            MI_dic = res['MI']
+            Prior = res['prior'] 
+            Posterior = res['post']
+            MI, range_MI, lower_MI, upper_MI, constr_values = MI_dic['values'], MI_dic['range'], MI_dic['lower'], MI_dic['upper'], MI_dic['constr']
+            theta_sample_prior, jeffreys_sample, all_params = Prior['samples'], Prior['jeffreys'], Prior['params']
+            theta_post_cstr, jeffreys_post = Posterior['samples'], Posterior['jeffreys']
+
+    theta_post_cstr_latent.append(theta_post_cstr)
+
+
+```
+
+
+```{python stem-plot}
+#| label: fig-probit_ecdf_latentdim
+#| fig-cap: "Empirical cumulative distribution functions for the constrained fitted posterior and the Jeffreys posterior using $5000$ samples. The band is obtained by computing the ECDFs over $100$ different seeds and monitoring the maximum and minimum ECDF values for each $\\theta$."
+
+# Post CDF computations 
+num_x = 5000
+x_values_alpha = np.linspace(0., 8., num_x)
+x_values_beta = np.linspace(0., 2., num_x)
+colors = ['orange', 'red', 'magenta', 'blue', 'black']
+
+# Create subplots for alpha and beta
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3))
+ax1.plot(x_values_alpha, jeff_alpha_nocstr, label='Jeffreys ECDF', color='green', linewidth=2) 
+ax2.plot(x_values_beta, jeff_beta_nocstr, label='Jeffreys ECDF', color='green', linewidth=2) 
+
+for i in range(num_p):
+    cdf_alpha = compute_ecdf(theta_post_nocstr_latent[i][:,0], x_values_alpha)
+    cdf_beta = compute_ecdf(theta_post_nocstr_latent[i][:,1], x_values_beta)
+    ax1.plot(x_values_alpha, cdf_alpha, label=f'$p={p_vals[i]}$', color=colors[i], linewidth=2)
+    ax2.plot(x_values_beta, cdf_beta, label=f'$p={p_vals[i]}$',color=colors[i], linewidth=2)
+
+ax1.set_xlabel(r'$\theta_1$')
+ax1.set_ylabel('CDF')
+ax1.grid()
+ax1.legend(loc='lower right', fontsize=12)
+ax2.set_xlabel(r'$\theta_2$')
+ax2.set_ylabel('CDF')
+ax2.grid()
+ax2.legend(loc='lower right', fontsize=12)
+plt.tight_layout()  
+plt.show()    
+
+```
+
+
+```{python stem-plot}
+#| label: fig-probit_ecdf_latentdim_cstr
+#| fig-cap: "Empirical cumulative distribution functions for the constrained fitted posterior and the Jeffreys posterior using $5000$ samples. The band is obtained by computing the ECDFs over $100$ different seeds and monitoring the maximum and minimum ECDF values for each $\\theta$."
+
+# Post CDF computations 
+num_x = 5000
+x_values_alpha = np.linspace(0., 8., num_x)
+x_values_beta = np.linspace(0., 2., num_x)
+colors = ['orange', 'red', 'magenta', 'blue', 'black']
+
+# Create subplots for alpha and beta
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3))
+ax1.plot(x_values_alpha, jeff_alpha_cstr, label='Jeffreys ECDF', color='green', linewidth=2) 
+ax2.plot(x_values_beta, jeff_beta_cstr, label='Jeffreys ECDF', color='green', linewidth=2) 
+
+for i in range(num_p):
+    cdf_alpha = compute_ecdf(theta_post_cstr_latent[i][:,0], x_values_alpha)
+    cdf_beta = compute_ecdf(theta_post_cstr_latent[i][:,1], x_values_beta)
+    ax1.plot(x_values_alpha, cdf_alpha, label=f'$p={p_vals[i]}$', color=colors[i],linewidth=2)
+    ax2.plot(x_values_beta, cdf_beta, label=f'$p={p_vals[i]}$', color=colors[i],linewidth=2)
+
+ax1.set_xlabel(r'$\theta_1$')
+ax1.set_ylabel('CDF')
+ax1.grid()
+ax1.legend(loc='lower right', fontsize=12)
+ax2.set_xlabel(r'$\theta_2$')
+ax2.set_ylabel('CDF')
+ax2.grid()
+ax2.legend(loc='lower right', fontsize=12)
+plt.tight_layout()  
+plt.show()     
+
+```
+
+[@fig-probit_ecdf_latentdim and @fig-probit_ecdf_latentdim_cstr compare the empirical cumulative distribution functions of the fitted posterior and the Jeffreys posterior when several values for the latent space dimension $p$ are considered. We observe that in both the unconstrained case and the constrained case, the ECDFs are quite different for the $\theta_1$ component when $p$ varies, these differences are even more notable on $\theta_2$.  We remark that the fitted distributions for $p=100$ are the closest to the target Jeffreys distributions compared to lower values of $p$, but this is likely due to random chance, since when we keep increasing $p$ to $200$, we obtain a worse approximation of the Jeffreys distributions. This last case is expected to be less stable due to the higher number of parameters to be fitted. The output of the algorithm is quite sensitive with respect to the choice of $p$ for the probit model, whereas for the multinomial model we noticed that this choice had little effect on the MMD values.]{style="color:orange;"}
+
+[A possible explanation for this behavior can be obtained by looking at the approximation of the target prior given in reference @van2025robustpost, which exhibits a correlation between $\theta_1$ and $\theta_2$. Thus, this allows us to numerically verify that even in the case where the prior is proper, the conditional variance of $\theta_2$ and the variance of $\theta_1$ are infinite due to the heavy tail in $\theta_2 \longrightarrow \infty$. The instability of the algorithm therefore seems to be due to the fact that it aims to approach a distribution of infinite variance.]{style="color:orange;"}
+
 
 # References {.unnumbered}
 
