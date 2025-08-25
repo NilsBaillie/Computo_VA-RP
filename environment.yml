@@ -1,0 +1,14 @@
+name: computo
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - jupyter
+  - pytorch
+  - matplotlib=3.8.0
+  - pandas=2.1.4
+  - scipy=1.11.4
+  - scikit-learn=1.2.2
+  - numpy=1.26.4
+  - numba=0.59.0
+  - tqdm=4.65.0
