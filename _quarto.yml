@@ -5,20 +5,6 @@ project:
 
 title: "Variational inference for approximate objective priors using neural networks"
 subtitle: ""
-author:
-  - name: Nils Baillie
-    corresponding: true
-    email: nils.baillie@cea.fr
-    affiliations:
-      - name: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques, 91191 Gif-sur-Yvette, France
-      - name: CMAP, CNRS, École polytechnique, Institut Polytechnique de Paris, 91120 Palaiseau, France
-  - name: Antoine Van Biesbroeck
-    affiliations:
-      - name: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques, 91191 Gif-sur-Yvette, France
-      - name: CMAP, CNRS, École polytechnique, Institut Polytechnique de Paris, 91120 Palaiseau, France
-  - name: Clément Gauchy
-    affiliations:
-      - name: Université Paris-Saclay, CEA, Service de Génie Logiciel pour la Simulation, 91191 Gif-sur-Yvette, France
 date: last-modified
 date-modified: last-modified
 abstract: >+
