@@ -689,7 +689,7 @@ $$
    \text{MMD}(\mathbb{P},\mathbb{Q}) = || \mu_{\mathbb{P}} - \mu_{\mathbb{Q}} ||_{\mathcal{H}},  
 $$
 
-where $\mu_{\mathbb{P}}$ and $\mu_{\mathbb{Q}}$ are respectively the kernel mean embeddings of distributions $\mathbb{P}$ and $\mathbb{Q}$ in a reproducible kernel Hilbert space (RKHS) $(\mathcal{H}, || \cdot ||_{\mathcal{H}})$, meaning: $\mu_\mathbb{P}(\theta') = \mathbb{E}_{\theta \sim \mathbb{P} }[K(\theta,\theta')]$ for all $\theta' \in \Theta$ and $K$ being the kernel. The MMD is used for instance in the context of two-sample tests (@gretton_mmd), whose purpose is to compare distributions. We use in our computations the Gaussian or RBF kernel: 
+where $\mu_{\mathbb{P}}$ and $\mu_{\mathbb{Q}}$ are respectively the kernel mean embeddings of distributions $\mathbb{P}$ and $\mathbb{Q}$ in a reproducible kernel Hilbert space (RKHS) $(\mathcal{H}, || \cdot ||_{\mathcal{H}})$, meaning: $\mu_{\mathbb{P}}(\theta') = \mathbb{E}_{\theta \sim \mathbb{P}}[K(\theta,\theta')]$ for all $\theta' \in \Theta$ and $K$ being the kernel. The MMD is used for instance in the context of two-sample tests (@gretton_mmd), whose purpose is to compare distributions. We use in our computations the Gaussian or RBF kernel: 
 $$
   K(\theta, \theta') = \exp(-0.5 \cdot ||\theta - \theta'||_2^2), 
 $$ 
