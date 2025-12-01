@@ -1,27 +1,42 @@
 project:
-  title: "VA-RP"
   render:
-    - main_nb.qmd
+    - published-202512-baillie-varp.qmd
 
 title: "Variational inference for approximate objective priors using neural networks"
-subtitle: ""
-date: last-modified
+author:
+  - name: Nils Baillie
+    corresponding: true
+    email: nils.baillie@cea.fr
+    affiliations:
+      - name: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques, 91191 Gif-sur-Yvette, France
+      - name: CMAP, CNRS, École polytechnique, Institut Polytechnique de Paris, 91120 Palaiseau, France
+        url: https://cmap.ip-paris.fr/ 
+  - name: Antoine Van Biesbroeck
+    affiliations:
+      - name: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques, 91191 Gif-sur-Yvette, France
+      - name: CMAP, CNRS, École polytechnique, Institut Polytechnique de Paris, 91120 Palaiseau, France
+        url: https://cmap.ip-paris.fr/ 
+      - name: (Now at Centre Borelli, ENS Paris-Saclay, Université Paris-Saclay, 91190 Gif-sur-Yvette, France)
+        url: https://centreborelli.ens-paris-saclay.fr/fr
+  - name: Clément Gauchy
+    affiliations:
+      - name: Université Paris-Saclay, CEA, Service de Génie Logiciel pour la Simulation, 91191 Gif-sur-Yvette, France
+date: 12-01-2025
 date-modified: last-modified
 abstract: >+
-  In Bayesian statistics, the choice of the prior can have an important influence on the posterior and the parameter estimation, especially when few data samples are available. To limit the added subjectivity from a priori information, one can use the framework of [objective priors, more particularly, we focus on reference priors in this work]{style="color:orange;"}. However, computing such priors is a difficult task in general. [Hence, we consider cases where the reference prior simplifies to the Jeffreys prior]{style="color:orange;"}. We develop in this paper a flexible algorithm based on variational inference which computes approximations of priors from a set of parametric distributions using neural networks. We also show that our algorithm can retrieve [modified Jeffreys]{style="color:green;"} priors when constraints are specified in the optimization problem to ensure the solution is proper. We propose a simple method to recover a relevant approximation of the parametric posterior distribution using Markov Chain Monte Carlo (MCMC) methods even if the density function of the parametric prior is not known in general. Numerical experiments on several statistical models of increasing complexity are presented. We show the usefulness of this approach by recovering the target distribution. The performance of the algorithm is evaluated on both prior and posterior distributions, jointly using variational inference and MCMC sampling.
+  In Bayesian statistics, the choice of the prior can have an important influence on the posterior and the parameter estimation, especially when few data samples are available. To limit the added subjectivity from a priori information, one can use the framework of objective priors, more particularly, we focus on reference priors in this work. However, computing such priors is a difficult task in general. Hence, we consider cases where the reference prior simplifies to the Jeffreys prior. We develop in this paper a flexible algorithm based on variational inference which computes approximations of priors from a set of parametric distributions using neural networks. We also show that our algorithm can retrieve modified Jeffreys priors when constraints are specified in the optimization problem to ensure the solution is proper. We propose a simple method to recover a relevant approximation of the parametric posterior distribution using Markov Chain Monte Carlo (MCMC) methods even if the density function of the parametric prior is not known in general. Numerical experiments on several statistical models of increasing complexity are presented. We show the usefulness of this approach by recovering the target distribution. The performance of the algorithm is evaluated on both prior and posterior distributions, jointly using variational inference and MCMC sampling.
 keywords: [Reference priors, Variational inference, Neural networks]
 citation:
   type: article-journal
   container-title: "Computo"
-  doi: "xxxx"
-  url: https://computo.sfds.asso.fr/template-computo-quarto
-  publisher: "Société Française de Statistique"
+  doi: "10.57750/76fh-t442"
+  publisher: "French Statistical Society"
   issn: "2824-7795"
 bibliography: references.bib
 github-user: computorg
-repo: "Computo_VA-RP"
-draft: true # set to false once the build is running
-published: false # will be set to true once accepted
+repo: "published-202512-baillie-varp"
+draft: false # set to false once the build is running
+published: true # will be set to true once accepted
 format:
   computo-html: default
   computo-pdf: default
