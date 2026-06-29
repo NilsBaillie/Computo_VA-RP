@@ -37,6 +37,7 @@ github-user: computorg
 repo: "published-202512-baillie-varp"
 draft: false # set to false once the build is running
 published: true # will be set to true once accepted
+google-scholar: true
 format:
   computo-html: default
   computo-pdf: default
