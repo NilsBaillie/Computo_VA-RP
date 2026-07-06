@@ -1,6 +1,7 @@
 project:
   render:
-    - published-202512-baillie-varp.qmd
+    - main.qmd
+    - README.qmd
 
 title: "Variational inference for approximate objective priors using neural networks"
 author:
@@ -35,8 +36,7 @@ citation:
 bibliography: references.bib
 github-user: computorg
 repo: "published-202512-baillie-varp"
-draft: false # set to false once the build is running
-published: true # will be set to true once accepted
+status: published
 google-scholar: true
 format:
   computo-html: default
