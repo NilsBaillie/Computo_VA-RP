@@ -20,6 +20,7 @@ author:
       - name: (Now at Centre Borelli, ENS Paris-Saclay, Université Paris-Saclay, 91190 Gif-sur-Yvette, France)
         url: https://centreborelli.ens-paris-saclay.fr/fr
   - name: Clément Gauchy
+    orcid: 0000-0003-0008-9378
     affiliations:
       - name: Université Paris-Saclay, CEA, Service de Génie Logiciel pour la Simulation, 91191 Gif-sur-Yvette, France
 date: 12-01-2025
@@ -35,6 +36,10 @@ citation:
   issn: "2824-7795"
   url: "https://computo-journal.org/published-202512-baillie-varp/"
 bibliography: references.bib
+related-identifiers:
+  - relation: IsVersionOf
+    type: URL
+    identifier: "https://hal.science/hal-05396180v1"
 github-user: computorg
 repo: "published-202512-baillie-varp"
 status: published
