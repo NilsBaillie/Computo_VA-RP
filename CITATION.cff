@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+message: If you use or cite this article, please use the metadata provided in 'preferred-citation'.
+title: Variational inference for approximate objective priors using neural networks
+authors:
+- family-names: Baillie
+  given-names: Nils
+  affiliation: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques,
+    91191 Gif-sur-Yvette, France; CMAP, CNRS, École polytechnique, Institut Polytechnique
+    de Paris, 91120 Palaiseau, France
+- family-names: Biesbroeck
+  given-names: Antoine Van
+  affiliation: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques,
+    91191 Gif-sur-Yvette, France; CMAP, CNRS, École polytechnique, Institut Polytechnique
+    de Paris, 91120 Palaiseau, France; (Now at Centre Borelli, ENS Paris-Saclay, Université
+    Paris-Saclay, 91190 Gif-sur-Yvette, France)
+- family-names: Gauchy
+  given-names: Clément
+  orcid: https://orcid.org/0000-0003-0008-9378
+  affiliation: Université Paris-Saclay, CEA, Service de Génie Logiciel pour la Simulation,
+    91191 Gif-sur-Yvette, France
+url: https://computo-journal.org/published-202512-baillie-varp/
+preferred-citation:
+  type: article
+  title: Variational inference for approximate objective priors using neural networks
+  authors:
+  - family-names: Baillie
+    given-names: Nils
+    affiliation: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques,
+      91191 Gif-sur-Yvette, France; CMAP, CNRS, École polytechnique, Institut Polytechnique
+      de Paris, 91120 Palaiseau, France
+  - family-names: Biesbroeck
+    given-names: Antoine Van
+    affiliation: Université Paris-Saclay, CEA, Service d'Études Mécaniques et Thermiques,
+      91191 Gif-sur-Yvette, France; CMAP, CNRS, École polytechnique, Institut Polytechnique
+      de Paris, 91120 Palaiseau, France; (Now at Centre Borelli, ENS Paris-Saclay,
+      Université Paris-Saclay, 91190 Gif-sur-Yvette, France)
+  - family-names: Gauchy
+    given-names: Clément
+    orcid: https://orcid.org/0000-0003-0008-9378
+    affiliation: Université Paris-Saclay, CEA, Service de Génie Logiciel pour la Simulation,
+      91191 Gif-sur-Yvette, France
+  journal: Computo
+  issn: 2824-7795
+  url: https://computo-journal.org/published-202512-baillie-varp/
+  publisher:
+    name: French Statistical Society
+  doi: 10.57750/76fh-t442
+  year: 2025
+doi: 10.57750/76fh-t442
+date-released: '2025-12-01'
